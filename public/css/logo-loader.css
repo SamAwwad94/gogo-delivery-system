@@ -1,0 +1,35 @@
+/* Logo Animation Styles */
+#loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+}
+
+.animated-logo {
+  width: 110px;
+  height: 75px;
+  position: relative;
+  animation: carMovement 1.5s cubic-bezier(0.1, 0.9, 0.2, 1) infinite;
+  object-fit: contain;
+}
+
+@keyframes carMovement {
+  0% {
+    left: -100px;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% + 100px);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,144 @@
+/* New Orders ShadCN Styles */
+
+/* Base styles */
+.shadcn-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Card styles */
+.shadcn-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.shadcn-card-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shadcn-card-body {
+  padding: 1rem;
+}
+
+/* Button styles */
+.shadcn-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.shadcn-button-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.shadcn-button-primary:hover {
+  background-color: #2563eb;
+}
+
+/* Table styles */
+.shadcn-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shadcn-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.shadcn-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.shadcn-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Form styles */
+.shadcn-form-group {
+  margin-bottom: 1rem;
+}
+
+.shadcn-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.shadcn-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+}
+
+/* Utility classes */
+.shadcn-flex {
+  display: flex;
+}
+
+.shadcn-justify-between {
+  justify-content: space-between;
+}
+
+.shadcn-items-center {
+  align-items: center;
+}
+
+.shadcn-mt-4 {
+  margin-top: 1rem;
+}
+
+.shadcn-mb-4 {
+  margin-bottom: 1rem;
+}
+
+.shadcn-p-4 {
+  padding: 1rem;
+}
+
+/* Status badges */
+.shadcn-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.shadcn-badge-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.shadcn-badge-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.shadcn-badge-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.shadcn-badge-info {
+  background-color: #3b82f6;
+  color: white;
+}
