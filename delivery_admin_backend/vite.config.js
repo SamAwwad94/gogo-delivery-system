@@ -1,8 +1,22 @@
 import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
-import react from "@vitejs/plugin-react"; // Changed from vue to react
+import react from "@vitejs/plugin-react";
+import path from 'path'; // Added for path resolution
 
 export default defineConfig({
+    resolve: { // Added resolve configuration
+        alias: {
+            '@': path.resolve(__dirname, './resources/js'),
+            // The user's example 'components/ui/button' implies a root-level 'components' alias
+            // or that 'components' is directly under 'resources/js'.
+            // Given the target structure `resources/js/Components/ui/button.jsx`,
+            // an import like `import { Button } from '@/Components/ui/button'` would work with the @ alias.
+            // If they want `import { Button } from 'components/ui/button'`,
+            // then 'components' would need to be aliased to 'resources/js/Components'.
+            // For now, I'll stick to the `@` alias as per the prompt's mention.
+            // If they want `import { Button } from 'Components/ui/button'`, that would also work with `@`.
+        },
+    },
     plugins: [
         laravel({
             input: [
