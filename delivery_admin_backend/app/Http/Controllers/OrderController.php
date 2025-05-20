@@ -40,6 +40,7 @@ use App\Notifications\CustomerSupportNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use Inertia\Inertia; // Added Inertia
 
 class OrderController extends Controller
 {
@@ -201,28 +202,30 @@ class OrderController extends Controller
     /**
      * Display a listing of orders with ShadCN styling.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Inertia\Response // Changed return type
      */
     public function shadcnIndex(Request $request)
     {
         $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
         $auth_user = authSession();
-        $assets = ['datatable'];
+        // $assets = ['datatable']; // Assets like 'datatable' are likely not needed for a React page
 
-        // Create button for admin
-        $button = '';
+        // Button configuration for React component
+        $buttonConfig = null;
         if ($auth_user->can('order-add')) {
-            $button = '<a href="' . route('order.create') . '" class="btn btn-added">
-                <img src="' . asset('assets/img/icons/plus.svg') . '" alt="img" class="me-1">
-                ' . __('message.add_new_order') . '
-            </a>';
+            $buttonConfig = [
+                'url' => route('order.create'),
+                'text' => __('message.add_new_order'),
+                'iconSrc' => asset('assets/img/icons/plus.svg') // Example, adjust as needed for React
+            ];
         }
 
         // Generate cache key based on request parameters
         $cacheKey = $this->getOrdersCacheKey($request);
 
         // Check if we have cached data
-        if (!$request->ajax() && Cache::has($cacheKey)) {
+        // Caching strategy might need adjustment for Inertia; consider client-side caching or Inertia's remember functionality.
+        if (/*!$request->ajax() && */ Cache::has($cacheKey)) { // Removed ajax check for now
             $orders = Cache::get($cacheKey);
         } else {
             // Build query with filters
@@ -236,32 +239,33 @@ class OrderController extends Controller
             }
 
             // Apply all filters
-            $this->applyFilters($query);
+            $this->applyFilters($query); // Assuming applyFilters is compatible
 
             // Get orders with pagination
-            $orders = $query->with(['client'])
-                ->paginate(10)
+            $orders = $query->with(['client']) // Ensure client relationship is loaded for props
+                ->paginate(10) // Or your preferred page size
                 ->appends(request()->query());
 
             // Cache the results for 5 minutes
-            if (!$request->ajax()) {
-                Cache::put($cacheKey, $orders, now()->addMinutes(5));
-            }
+            // if (!$request->ajax()) {
+            Cache::put($cacheKey, $orders, now()->addMinutes(5));
+            // }
         }
 
-        // Handle AJAX requests
-        if ($request->ajax()) {
-            return view('orders.partials._table', compact('orders'))->render();
-        }
+        // Handle AJAX requests - This part is for traditional Blade views.
+        // For Inertia, partial reloads or client-side filtering/pagination would be used.
+        // if ($request->ajax()) {
+        //     return view('orders.partials._table', compact('orders'))->render();
+        // }
 
-        // Use the new ShadCN order view
-        return view('orders.shadcn-index', compact(
-            'pageTitle',
-            'auth_user',
-            'assets',
-            'button',
-            'orders'
-        ));
+        // Render the React page for ShadCN orders
+        return Inertia::render('Shadcn/OrderTable', [ // Assuming a React component at resources/js/Pages/Shadcn/OrderTable.jsx
+            'pageTitle' => $pageTitle,
+            'authUser' => $auth_user,
+            'buttonConfig' => $buttonConfig,
+            'orders' => $orders, // Pass paginated orders
+            'filters' => $request->all(), // Pass current filters to the React component
+        ]);
     }
 
 

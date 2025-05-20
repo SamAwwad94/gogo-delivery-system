@@ -6,22 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title') - {{ config('app.name', 'Laravel') }}</title>
+    <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
     @include('partials._head')
-    @yield('styles')
+
+    {{-- Vite Assets --}}
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+    @inertiaHead
 </head>
 
-<body class="" id="app">
+<body class="">
     @include('partials._body')
 
-    <div class="content-page">
-        <div class="content">
-            @yield('content')
-        </div>
-    </div>
+    @inertia
 
-    @yield('scripts')
 </body>
 
 </html>

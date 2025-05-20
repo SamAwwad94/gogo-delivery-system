@@ -4,16 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\DataTables\ShadcnOrderDataTable;
+use Inertia\Inertia; // Added Inertia
 
 class ShadcnDemoController extends Controller
 {
     /**
-     * Display a listing of the orders with ShadCN styling.
+     * Display a listing of the orders with ShadCN styling using Inertia.
      *
-     * @param ShadcnOrderDataTable $dataTable
-     * @return \Illuminate\Http\Response|\Illuminate\Contracts\View\View
+     * @param ShadcnOrderDataTable $dataTable // DataTable might be replaced by React table components
+     * @return \Inertia\Response // Changed return type
      */
-    public function orders(ShadcnOrderDataTable $dataTable)
+    public function orders(Request $request /* ShadcnOrderDataTable $dataTable - DataTable usage needs rethinking for React */)
     {
         $pageTitle = 'Orders';
         $auth_user = authSession();
@@ -127,17 +128,35 @@ class ShadcnDemoController extends Controller
         });
 
         // Use the DataTable for the main table display
-        if (request()->ajax()) {
-            return $dataTable->render('layouts.shadcn-datatable', compact('pageTitle', 'button', 'auth_user', 'assets'));
-        }
+        // if (request()->ajax()) {
+        // AJAX handling for DataTables would need to be re-evaluated for a full React page.
+        // return $dataTable->render('layouts.shadcn-datatable', compact('pageTitle', 'button', 'auth_user', 'assets'));
+        // }
 
         // Check if delivery routes view is requested
-        if (request()->has('new_ui') && request('new_ui') == 'true') {
-            $pageTitle = 'Delivery Routes';
-            return view('shadcn.delivery-routes', compact('pageTitle', 'auth_user', 'assets', 'orders', 'button'));
-        }
+        // if (request()->has('new_ui') && request('new_ui') == 'true') {
+        //     $pageTitle = 'Delivery Routes (React)'; // Example: Differentiate if needed
+        //     return Inertia::render('Shadcn/DeliveryRoutes', [ // Assuming a DeliveryRoutes.jsx page
+        //         'pageTitle' => $pageTitle,
+        //         'authUser' => $auth_user,
+        //         'assets' => $assets, // Assets might be handled differently with Vite/React
+        //         'orders' => $orders,
+        //         'button' => $button, // Button HTML might need to be a React component
+        //     ]);
+        // }
 
-        // Use our custom view for the full page with filters
-        return view('shadcn.orders', compact('pageTitle', 'auth_user', 'assets', 'orders', 'button'));
+        // Render the React page for orders
+        return Inertia::render('Shadcn/Orders', [
+            'pageTitle' => $pageTitle,
+            'authUser' => $auth_user,
+            // 'assets' => $assets, // Assets like 'datatable' are likely not needed for a React page
+            'orders' => $orders,
+            'buttonConfig' => [ // Pass button data instead of raw HTML
+                'url' => route('order.create'),
+                'text' => __('message.add_form_title', ['form' => __('message.order')]),
+                'iconSvg' => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>'
+            ],
+            'filters' => $request->all(), // Pass current filters to the React component
+        ]);
     }
 }
