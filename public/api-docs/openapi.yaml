@@ -1,0 +1,553 @@
+openapi: 3.0.0
+info:
+  title: Gogo Delivery API
+  description: API documentation for Gogo Delivery application
+  version: 1.0.0
+  contact:
+    email: support@gogodelivery.com
+servers:
+  - url: http://127.0.0.1:8002/api
+    description: Local development server
+  - url: https://api.gogodelivery.com
+    description: Production server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        user_type:
+          type: string
+          enum: [admin, client, delivery_man]
+          example: client
+        status:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        contact_number:
+          type: string
+          example: "+1234567890"
+        address:
+          type: string
+          example: "123 Main St, City"
+        country_id:
+          type: integer
+          format: int64
+          example: 1
+        city_id:
+          type: integer
+          format: int64
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    DeliveryMan:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            is_verified_delivery_man:
+              type: boolean
+              example: true
+            is_online:
+              type: boolean
+              example: true
+            is_available:
+              type: boolean
+              example: true
+            rating:
+              type: number
+              format: float
+              example: 4.5
+            wallet:
+              type: object
+              properties:
+                total_amount:
+                  type: number
+                  format: float
+                  example: 500.00
+                total_withdrawn:
+                  type: number
+                  format: float
+                  example: 200.00
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeliveryManDocument'
+    DeliveryManDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        delivery_man_id:
+          type: integer
+          format: int64
+          example: 1
+        document_id:
+          type: integer
+          format: int64
+          example: 1
+        is_verified:
+          type: integer
+          enum: [0, 1]
+          example: 1
+        document_name:
+          type: string
+          example: "Driver's License"
+        document_file:
+          type: string
+          format: uri
+          example: "https://example.com/documents/license.jpg"
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        client_id:
+          type: integer
+          format: int64
+          example: 2
+        delivery_man_id:
+          type: integer
+          format: int64
+          example: 3
+        country_id:
+          type: integer
+          format: int64
+          example: 1
+        city_id:
+          type: integer
+          format: int64
+          example: 1
+        pickup_point:
+          type: string
+          example: "123 Main St, City"
+        delivery_point:
+          type: string
+          example: "456 Oak St, City"
+        status:
+          type: string
+          enum: [create, active, courier_assigned, courier_arrived, courier_picked_up, courier_departed, completed, cancelled]
+          example: active
+        payment_id:
+          type: integer
+          format: int64
+          example: 1
+        total_amount:
+          type: number
+          format: float
+          example: 25.50
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        order_id:
+          type: integer
+          format: int64
+          example: 1
+        client_id:
+          type: integer
+          format: int64
+          example: 2
+        payment_type:
+          type: string
+          enum: [cash, card, wallet]
+          example: card
+        payment_status:
+          type: string
+          enum: [pending, paid, failed]
+          example: paid
+        amount:
+          type: number
+          format: float
+          example: 25.50
+        transaction_id:
+          type: string
+          example: "txn_123456789"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "An error occurred"
+        error_code:
+          type: integer
+          example: 500
+        errors:
+          type: object
+          example: {}
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user and return JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Login successful"
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /delivery-men:
+    get:
+      tags:
+        - Delivery Men
+      summary: Get all delivery men
+      description: Returns a list of delivery men with pagination
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 15
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeliveryMan'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 100
+                      per_page:
+                        type: integer
+                        example: 15
+                      current_page:
+                        type: integer
+                        example: 1
+                      last_page:
+                        type: integer
+                        example: 7
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Delivery Men
+      summary: Create a new delivery man
+      description: Creates a new delivery man account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - contact_number
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                contact_number:
+                  type: string
+                  example: "+1234567890"
+                address:
+                  type: string
+                  example: "123 Main St, City"
+                country_id:
+                  type: integer
+                  example: 1
+                city_id:
+                  type: integer
+                  example: 1
+                status:
+                  type: integer
+                  enum: [0, 1]
+                  example: 1
+      responses:
+        '201':
+          description: Delivery man created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delivery man created successfully"
+                  data:
+                    $ref: '#/components/schemas/DeliveryMan'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /delivery-men/{id}:
+    get:
+      tags:
+        - Delivery Men
+      summary: Get delivery man by ID
+      description: Returns a single delivery man
+      parameters:
+        - name: id
+          in: path
+          description: ID of delivery man to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DeliveryMan'
+        '404':
+          description: Delivery man not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Delivery Men
+      summary: Update delivery man
+      description: Updates an existing delivery man
+      parameters:
+        - name: id
+          in: path
+          description: ID of delivery man to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                contact_number:
+                  type: string
+                  example: "+1234567890"
+                address:
+                  type: string
+                  example: "123 Main St, City"
+                country_id:
+                  type: integer
+                  example: 1
+                city_id:
+                  type: integer
+                  example: 1
+                status:
+                  type: integer
+                  enum: [0, 1]
+                  example: 1
+                is_online:
+                  type: boolean
+                  example: true
+                is_available:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Delivery man updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delivery man updated successfully"
+                  data:
+                    $ref: '#/components/schemas/DeliveryMan'
+        '404':
+          description: Delivery man not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Delivery Men
+      summary: Delete delivery man
+      description: Soft deletes a delivery man
+      parameters:
+        - name: id
+          in: path
+          description: ID of delivery man to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Delivery man deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Delivery man deleted successfully"
+        '404':
+          description: Delivery man not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

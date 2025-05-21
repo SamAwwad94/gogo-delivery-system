@@ -1,0 +1,55 @@
+/* Fix for oversized chevron SVGs */
+svg[viewBox="0 0 512 512"] {
+    max-width: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Target specific chevron SVGs */
+svg[viewBox="0 0 512 512"] polyline[points="112 184 256 328 400 184"] {
+    max-width: 24px !important;
+    max-height: 24px !important;
+}
+
+/* Target all SVG icons */
+.n-icon svg, 
+.n-base-icon svg,
+svg.h-4, 
+svg.w-4,
+svg.h-5,
+svg.w-5 {
+    max-width: 24px !important;
+    max-height: 24px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Target Heroicons specifically */
+svg[data-slot="icon"] {
+    max-width: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Target Carbon icons */
+svg.carbon-icon {
+    max-width: 24px !important;
+    max-height: 24px !important;
+}
+
+/* Target any large SVG */
+svg {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* Ensure parent containers don't allow SVGs to overflow */
+.n-icon, 
+.n-base-icon,
+button,
+.filter-pill,
+.action-button {
+    overflow: hidden !important;
+}

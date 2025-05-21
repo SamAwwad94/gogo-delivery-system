@@ -1,0 +1,248 @@
+/* ShadCN CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 221.2 83.2% 53.3%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 221.2 83.2% 53.3%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 217.2 91.2% 59.8%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 224.3 76.3% 48%;
+    }
+}
+
+/* Base styles */
+body {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+/* ShadCN Table Styles */
+.shadcn-table {
+    width: 100%;
+    font-size: 0.875rem;
+}
+
+.shadcn-table thead {
+    background-color: rgba(229, 231, 235, 0.5);
+}
+
+.shadcn-table th {
+    height: 3rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    text-align: left;
+    vertical-align: middle;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.shadcn-table tbody tr {
+    border-bottom-width: 1px;
+    transition-property: color, background-color, border-color,
+        text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.shadcn-table tbody tr:hover {
+    background-color: rgba(229, 231, 235, 0.5);
+}
+
+.shadcn-table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* ShadCN Filter Styles */
+.shadcn-filter {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 0.375rem;
+    border-width: 1px;
+}
+
+.shadcn-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.shadcn-filter-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.shadcn-filter-badge {
+    margin-left: 0.5rem;
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    font-size: 0.75rem;
+    color: #ffffff;
+}
+
+.shadcn-filter-toggle {
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.shadcn-filter-toggle:hover {
+    background-color: #f3f4f6;
+}
+
+.shadcn-filter-body {
+    display: grid;
+    gap: 1rem;
+}
+
+.shadcn-filter-row {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .shadcn-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .shadcn-filter-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .shadcn-filter-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.shadcn-filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.shadcn-filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.shadcn-filter-select {
+    display: flex;
+    height: 2.5rem;
+    width: 100%;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    border-color: #d1d5db;
+    background-color: #ffffff;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.shadcn-filter-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.shadcn-filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.shadcn-filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition-property: color, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    height: 2.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.shadcn-filter-button:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.shadcn-filter-button-primary {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
+.shadcn-filter-button-primary:hover {
+    background-color: rgba(59, 130, 246, 0.9);
+}
+
+.shadcn-filter-button-secondary {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.shadcn-filter-button-secondary:hover {
+    background-color: rgba(243, 244, 246, 0.8);
+}

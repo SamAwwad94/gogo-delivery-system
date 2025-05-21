@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Orders Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .shadcn-filter-container {
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            margin-bottom: 1rem;
+        }
+        .shadcn-filter-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            background-color: #f8fafc;
+        }
+        .shadcn-filter-body {
+            padding: 1rem;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+        .shadcn-filter-item {
+            margin-bottom: 0.75rem;
+        }
+        .shadcn-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            cursor: pointer;
+        }
+        .shadcn-button-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: 1px solid #3b82f6;
+        }
+        .shadcn-button-ghost {
+            background-color: transparent;
+            color: #334155;
+            border: 1px solid transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold">Orders</h1>
+                <p class="text-gray-600">Manage your orders</p>
+            </div>
+            <div>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Add New Order
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <!-- View Toggle -->
+            <div class="flex justify-end mb-4">
+                <div class="inline-flex items-center rounded-md border border-gray-300 bg-white p-1 text-gray-500">
+                    <button class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium bg-blue-600 text-white shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="3" x2="21" y1="9" y2="9"></line><line x1="3" x2="21" y1="15" y2="15"></line><line x1="9" x2="9" y1="9" y2="21"></line><line x1="15" x2="15" y1="9" y2="21"></line></svg>
+                        Table
+                    </button>
+                    <button class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" x2="9" y1="3" y2="18"></line><line x1="15" x2="15" y1="6" y2="21"></line></svg>
+                        Map
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="shadcn-filter-container mb-4">
+                <div class="shadcn-filter-header">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>
+                        <h3 class="text-base font-medium">Filters</h3>
+                    </div>
+                    <div class="flex items-center">
+                        <button class="shadcn-button shadcn-button-ghost text-sm mr-2">Clear</button>
+                        <button class="shadcn-button shadcn-button-primary text-sm">Apply</button>
+                    </div>
+                </div>
+                <div class="shadcn-filter-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                        <!-- Order ID Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Order ID</label>
+                            <input type="text" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="Search by order ID">
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Status</label>
+                            <select class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm">
+                                <option value="">All Statuses</option>
+                                <option value="draft">Draft</option>
+                                <option value="create">Created</option>
+                                <option value="courier_assigned">Assigned</option>
+                                <option value="courier_accepted">Accepted</option>
+                                <option value="courier_arrived">Arrived</option>
+                                <option value="courier_picked_up">Picked Up</option>
+                                <option value="courier_departed">Departed</option>
+                                <option value="completed">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Customer Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Customer</label>
+                            <select class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm">
+                                <option value="">All Customers</option>
+                                <option value="1">John Doe</option>
+                                <option value="2">Jane Smith</option>
+                                <option value="3">Robert Johnson</option>
+                                <option value="4">Sarah Williams</option>
+                                <option value="5">Michael Brown</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Phone Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Phone</label>
+                            <input type="text" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="Search by phone">
+                        </div>
+                        
+                        <!-- Pickup Location Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Pickup Location</label>
+                            <input type="text" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="Search by location">
+                        </div>
+                        
+                        <!-- Delivery Location Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Delivery Location</label>
+                            <input type="text" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="Search by location">
+                        </div>
+                        
+                        <!-- Payment Status Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Payment Status</label>
+                            <select class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm">
+                                <option value="">All Payment Statuses</option>
+                                <option value="paid">Paid</option>
+                                <option value="unpaid">Unpaid</option>
+                                <option value="partial">Partial</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Date Range Filter -->
+                        <div class="shadcn-filter-item">
+                            <label class="text-sm font-medium mb-1 block">Date Range</label>
+                            <div class="flex space-x-2">
+                                <input type="date" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="From">
+                                <input type="date" class="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm" placeholder="To">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200">
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Order ID</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Date</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Status</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Customer</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Phone</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Pickup Location</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Delivery Location</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Payment Status</th>
+                            <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sample Order 1 -->
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="p-4 align-middle">ORD-001</td>
+                            <td class="p-4 align-middle">12 May 2023</td>
+                            <td class="p-4 align-middle">
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-green-100 text-green-800 ring-green-200">
+                                    Delivered
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle">John Doe</td>
+                            <td class="p-4 align-middle">+961 76 123 456</td>
+                            <td class="p-4 align-middle">Hamra, Beirut</td>
+                            <td class="p-4 align-middle">Jounieh</td>
+                            <td class="p-4 align-middle">
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-green-100 text-green-800 ring-green-200">
+                                    Paid
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle">
+                                <div class="flex space-x-2">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Sample Order 2 -->
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="p-4 align-middle">ORD-002</td>
+                            <td class="p-4 align-middle">13 May 2023</td>
+                            <td class="p-4 align-middle">
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-yellow-100 text-yellow-800 ring-yellow-200">
+                                    Pending
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle">Jane Smith</td>
+                            <td class="p-4 align-middle">+961 76 789 012</td>
+                            <td class="p-4 align-middle">Achrafieh, Beirut</td>
+                            <td class="p-4 align-middle">Tripoli</td>
+                            <td class="p-4 align-middle">
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset bg-red-100 text-red-800 ring-red-200">
+                                    Unpaid
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle">
+                                <div class="flex space-x-2">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-4">
+                <div class="text-sm text-gray-500">
+                    Showing 1 to 2 of 2 entries
+                </div>
+                <div class="flex items-center space-x-1">
+                    <button class="relative inline-flex h-9 min-w-[36px] items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-100 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <button class="relative inline-flex h-9 min-w-[36px] items-center justify-center rounded-md bg-blue-600 text-white shadow hover:bg-blue-700 text-sm font-medium transition-colors">
+                        1
+                    </button>
+                    <button class="relative inline-flex h-9 min-w-[36px] items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-100 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
