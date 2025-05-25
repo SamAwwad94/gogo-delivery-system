@@ -62,3 +62,9 @@
 // // Extra Pages
 @import "./backend/pages/pages";
 @import "./backend/layouts/dashboards";
+// Ensure submenu items under #sub_admin with class .sidebar-layout are visible
+ul#sub_admin {
+    li.sidebar-layout {
+        display: list-item;
+    }
+}

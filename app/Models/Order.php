@@ -97,7 +97,7 @@ class Order extends Model implements HasMedia
         return $this->belongsTo(User::class, 'client_id', 'id');
     }
 
-    public function delivery_man()
+    public function deliveryMan()
     {
         return $this->belongsTo(User::class, 'delivery_man_id', 'id');
     }

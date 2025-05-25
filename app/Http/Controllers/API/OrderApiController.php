@@ -203,7 +203,8 @@ class OrderApiController extends Controller
                 'pickup_location' => $pickupAddress,
                 'delivery_location' => $deliveryAddress,
                 'phone' => $phone,
-                'created_at' => $order->created_at->format('M d, Y H:i'),
+                'created_at' => \Carbon\Carbon::parse($order->created_at)->format('M d, Y H:i'),
+
                 'actions' => $this->getActionButtons($order)
             ];
         });

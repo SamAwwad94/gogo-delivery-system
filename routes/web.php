@@ -267,6 +267,16 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
 
     // Bulk Actions
     Route::delete('order/bulk-delete', [OrderController::class, 'bulkDelete'])->name('order.bulk-delete');
+    Route::delete('users/bulk-delete', [ClientController::class, 'bulkDelete'])->name('users.bulk-delete');
+    Route::delete('city/bulk-delete', [CityController::class, 'bulkDelete'])->name('city.bulk-delete');
+
+    // Export Routes for Users
+    Route::get('users/export/csv', [ClientController::class, 'exportCsv'])->name('users.export.csv');
+    Route::get('users/export/pdf', [ClientController::class, 'exportPdf'])->name('users.export.pdf');
+
+    // Export Routes for Cities
+    Route::get('city/export/csv', [CityController::class, 'exportCsv'])->name('city.export.csv');
+    Route::get('city/export/pdf', [CityController::class, 'exportPdf'])->name('city.export.pdf');
 
     // Refactored Order Controller Routes (using service layer)
     Route::resource('refactored-order', RefactoredOrderController::class);
@@ -495,6 +505,9 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::get('get-frontend-order-status', [FronthomeController::class, 'getFrontendOrderStatusList'])->name('get.frontend.order.status.status');
     Route::post('store-frontend-order-status', [FronthomeController::class, 'storeFrontendOrderStatusData'])->name('store.frontend.order.status.data');
     Route::post('order-status-data-delete', [FronthomeController::class, 'frontendOrderStatusDataDestroy'])->name('delete.frontend.order.status.data');
+
+    // React Test Route
+    Route::get('react-test', [App\Http\Controllers\ReactTestController::class, 'dashboard'])->name('react.test');
 
 });
 

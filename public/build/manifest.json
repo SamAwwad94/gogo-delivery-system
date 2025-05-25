@@ -1,120 +1,16 @@
 {
-  "__plugin-vue_export-helper-DlAUqK2U.js": {
-    "file": "assets/_plugin-vue_export-helper-DlAUqK2U.js",
-    "name": "_plugin-vue_export-helper"
-  },
-  "_dayjs.min-Cf_VpHR5.js": {
-    "file": "assets/dayjs.min-Cf_VpHR5.js",
-    "name": "dayjs.min",
-    "imports": [
-      "_new-orders-bundle-YvbRubx2.js"
-    ]
-  },
-  "_legacy-l0sNRNKZ.js": {
-    "file": "assets/legacy-l0sNRNKZ.js",
-    "name": "legacy"
-  },
-  "_new-orders-bundle-YvbRubx2.js": {
-    "file": "assets/new-orders-bundle-YvbRubx2.js",
-    "name": "new-orders-bundle"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-l0sNRNKZ.js",
-    "name": "app",
+    "file": "assets/app-B7Pqtvtu.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
-  "resources/css/new-orders.css": {
-    "file": "assets/new-orders-C6G_3qQV.css",
-    "src": "resources/css/new-orders.css",
-    "isEntry": true
-  },
-  "resources/js/app.js": {
-    "file": "assets/app-B_9xOxt_.js",
+  "resources/js/app.tsx": {
+    "file": "assets/app-Cp9xMR20.js",
     "name": "app",
-    "src": "resources/js/app.js",
-    "isEntry": true
-  },
-  "resources/js/components/new-orders-shadcn/App.vue": {
-    "file": "assets/App-CmMi8b4x.js",
-    "name": "App",
-    "src": "resources/js/components/new-orders-shadcn/App.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/new-orders-app.js",
-      "_new-orders-bundle-YvbRubx2.js"
-    ],
-    "dynamicImports": [
-      "resources/js/components/new-orders-shadcn/AppHeader.vue",
-      "resources/js/components/new-orders-shadcn/EnhancedOrdersTable.vue"
-    ],
-    "css": [
-      "assets/App-tn0RQdqM.css"
-    ]
-  },
-  "resources/js/components/new-orders-shadcn/AppHeader.vue": {
-    "file": "assets/AppHeader-BVame9J6.js",
-    "name": "AppHeader",
-    "src": "resources/js/components/new-orders-shadcn/AppHeader.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_new-orders-bundle-YvbRubx2.js"
-    ],
-    "css": [
-      "assets/AppHeader-UOHu_eYx.css"
-    ]
-  },
-  "resources/js/components/new-orders-shadcn/EnhancedOrdersTable.vue": {
-    "file": "assets/EnhancedOrdersTable-kmhNu8WW.js",
-    "name": "EnhancedOrdersTable",
-    "src": "resources/js/components/new-orders-shadcn/EnhancedOrdersTable.vue",
-    "isDynamicEntry": true,
-    "imports": [
-      "_new-orders-bundle-YvbRubx2.js",
-      "_dayjs.min-Cf_VpHR5.js",
-      "__plugin-vue_export-helper-DlAUqK2U.js"
-    ],
-    "css": [
-      "assets/EnhancedOrdersTable-D48L3EyA.css"
-    ]
-  },
-  "resources/js/modernization-test.js": {
-    "file": "assets/modernization-test-CHiVkpJY.js",
-    "name": "modernization-test",
-    "src": "resources/js/modernization-test.js",
+    "src": "resources/js/app.tsx",
     "isEntry": true,
-    "imports": [
-      "_new-orders-bundle-YvbRubx2.js",
-      "_dayjs.min-Cf_VpHR5.js",
-      "__plugin-vue_export-helper-DlAUqK2U.js"
-    ],
     "css": [
-      "assets/modernization-test-BfBJcqpY.css"
-    ]
-  },
-  "resources/js/new-orders-app.js": {
-    "file": "assets/new-orders-app-BDSCB8q5.js",
-    "name": "new-orders-app",
-    "src": "resources/js/new-orders-app.js",
-    "isEntry": true,
-    "imports": [
-      "_new-orders-bundle-YvbRubx2.js"
-    ],
-    "dynamicImports": [
-      "resources/js/components/new-orders-shadcn/App.vue"
-    ],
-    "css": [
-      "assets/new-orders-app-Btl9b8Jn.css"
-    ]
-  },
-  "resources/js/simple-test.js": {
-    "file": "assets/simple-test-CzvBYdxG.js",
-    "name": "simple-test",
-    "src": "resources/js/simple-test.js",
-    "isEntry": true,
-    "imports": [
-      "_new-orders-bundle-YvbRubx2.js"
+      "assets/app-B7Pqtvtu.css"
     ]
   }
 }

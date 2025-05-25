@@ -1,74 +1,78 @@
-<x-master-layout :assets="$assets ?? []">
-    <link rel="stylesheet" href="{{ asset('css/shadcn-table.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/shadcn-filter.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/shadcn-responsive.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<x-master-layout>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title">{{ $pageTitle ?? 'Orders' }}</h4>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>{{ __('message.id') }}</th>
+                                        <th>{{ __('message.customer') }}</th>
+                                        <th>{{ __('message.delivery_man') }}</th>
+                                        <th>{{ __('message.datetime') }}</th>
+                                        <th>{{ __('message.status') }}</th>
+                                        <th>{{ __('message.payment_status') }}</th>
+                                        <th>{{ __('message.action') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if(isset($orders) && $orders->count() > 0)
+                                        @foreach($orders as $order)
+                                            <tr>
+                                                <td>{{ $order->id }}</td>
+                                                <td>{{ $order->client ? $order->client->name : '-' }}</td>
+                                                <td>{{ $order->delivery_man ? $order->delivery_man->name : '-' }}</td>
+                                                <td>{{ $order->created_at ? $order->created_at->format('Y-m-d H:i') : '-' }}</td>
+                                                <td>
+                                                    <span class="badge badge-{{ $order->status == 'completed' ? 'success' : ($order->status == 'cancelled' ? 'danger' : 'warning') }}">
+                                                        {{ ucfirst($order->status) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-{{ $order->payment_status == 'paid' ? 'success' : 'warning' }}">
+                                                        {{ ucfirst($order->payment_status ?? 'pending') }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('order.show', $order->id) }}" class="btn btn-sm btn-primary">
+                                                        <i class="fa fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td colspan="7" class="text-center">{{ __('message.no_record_found') }}</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
 
-    <!-- CSRF Token -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <div class="page-header">
-        <div class="page-title">
-            <h4>{{ __('message.order_list') }}</h4>
-            <h6>{{ __('message.manage_your_orders') }}</h6>
-        </div>
-        <div class="page-btn">
-            {!! $button !!}
+                        @if(isset($orders) && method_exists($orders, 'links'))
+                            <div class="d-flex justify-content-center">
+                                {{ $orders->links() }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <!-- View Toggle -->
-            @include('orders.partials._view_toggle')
-
-            <!-- Filter Pills -->
-            @include('orders.partials._filters')
-
-            <!-- Orders Table -->
-            @include('orders.partials._table')
-        </div>
-    </div>
-
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/toastr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-
-    <!-- Pusher for Real-time Updates -->
-    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
-    <script src="{{ asset('js/laravel-echo.js') }}"></script>
-    <script>
-        // Create a fallback Echo object if real-time updates are not available
-        window.Echo = window.Echo || {
-            channel: function () {
-                return {
-                    listen: function () {
-                        return this;
-                    }
-                };
-            }
-        };
-
-        // Initialize Pusher only if it's available and we have API keys
-        if (typeof Pusher !== 'undefined' && '{{ env('PUSHER_APP_KEY') }}') {
-            window.Echo = new Echo({
-                broadcaster: 'pusher',
-                key: '{{ env('PUSHER_APP_KEY') }}',
-                cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
-                forceTLS: true
+    @section('bottom_script')
+        <script>
+            $(document).ready(function () {
+                // Simple table display without DataTable for now
+                console.log('Orders page loaded successfully');
             });
-        }
-    </script>
-
-    <!-- Enhanced Orders Table JavaScript -->
-    <script src="{{ asset('js/enhanced-orders-table-new.js') }}"></script>
-    <script src="{{ asset('js/orders-enhancements.js') }}"></script>
-    <script src="{{ asset('js/orders-realtime.js') }}"></script>
-    <script src="{{ asset('js/orders-dashboard.js') }}"></script>
-    <script src="{{ asset('js/orders-performance.js') }}"></script>
+        </script>
+    @endsection
 </x-master-layout>

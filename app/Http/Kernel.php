@@ -41,6 +41,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\LanguageTranslator::class,
             \App\Http\Middleware\InjectSettings::class,
             \App\Http\Middleware\GenerateMenus::class,
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ],
 
         'api' => [

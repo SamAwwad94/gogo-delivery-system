@@ -19,6 +19,7 @@ use App\Models\Claims;
 use App\Models\Country;
 use App\Models\UserAddress;
 use App\Models\WithdrawRequest;
+use Inertia\Inertia;
 
 class ClientController extends Controller
 {
@@ -34,11 +35,11 @@ class ClientController extends Controller
             return redirect()->back()->withErrors($message);
         }
 
-        // Use ShadCN table by default, unless classic view is requested
+        // Use React/Inertia by default, unless classic view is requested
         if (request()->has('classic') && request()->classic == 1) {
             // Continue with the original DataTable implementation
         } else {
-            return $this->shadcnIndex();
+            return $this->indexInertia();
         }
         $pageTitle = __('message.list_form_title', ['form' => __('message.user')]);
         $auth_user = authSession();
@@ -73,6 +74,102 @@ class ClientController extends Controller
         $multi_checkbox_delete = $auth_user->can('users-delete') ? '<button id="deleteSelectedBtn" checked-title = "users-checked" class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
         return $dataTable->render('global.user-filter', compact('assets', 'pageTitle', 'button', 'auth_user', 'multi_checkbox_delete', 'params', 'reset_file_button', 'selectedCityId', 'cities', 'selectedCountryId', 'country'));
     }
+
+    /**
+     * Display users using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function indexInertia()
+    {
+        if (!auth()->user()->can('users-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.user')]);
+        $auth_user = authSession();
+        $assets = ['datatable'];
+
+        // Build query with filters
+        $query = User::where('user_type', 'client');
+
+        // Apply filters
+        $this->applyUsersFilters($query);
+
+        // Get users with pagination
+        $users = $query->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'user_type' => request('user_type'),
+            'status' => request('status'),
+            'is_verified' => request('is_verified'),
+            'search' => request('search'),
+            'city_id' => request('city_id'),
+            'country_id' => request('country_id'),
+        ];
+
+        return Inertia::render('Users/Index', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'users' => $users,
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Apply filters to the users query
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return void
+     */
+    private function applyUsersFilters($query)
+    {
+        // User type filter
+        if (request()->has('user_type') && request('user_type') != '') {
+            $query->where('user_type', request('user_type'));
+        }
+
+        // Status filter
+        if (request()->has('status') && request('status') != '') {
+            $query->where('status', request('status'));
+        }
+
+        // Verification filter
+        if (request()->has('is_verified') && request('is_verified') != '') {
+            $isVerified = request('is_verified') == '1';
+            if ($isVerified) {
+                $query->whereNotNull('email_verified_at');
+            } else {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        // Search filter
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('contact_number', 'like', "%{$search}%");
+            });
+        }
+
+        // City filter
+        if (request()->has('city_id') && request('city_id') != '') {
+            $query->where('city_id', request('city_id'));
+        }
+
+        // Country filter
+        if (request()->has('country_id') && request('country_id') != '') {
+            $query->where('country_id', request('country_id'));
+        }
+    }
+
     /**
      * Display a listing of users with ShadCN styling.
      *

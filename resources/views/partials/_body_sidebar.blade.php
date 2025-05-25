@@ -7,7 +7,8 @@
     use App\Models\Setting;
     use App\Models\CustomerSupport;
     use Carbon\Carbon;
-    $MyNavBar = \Menu::make('MenuList', function ($menu) use ($url) {
+    use Lavary\Menu\Facade as Menu;
+    $MyNavBar = Menu::make('MenuList', function ($menu) use ($url) {
         //Admin Dashboard
 
 
@@ -59,6 +60,11 @@
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
 
+            $menu->city->add('<span>Classic Cities</span>', ['class' => 'sidebar-layout', 'route' => ['city.index', 'classic' => 1]])
+                ->data('permission', 'city-list')
+                ->prepend('<i class="fa fa-table"></i>')
+                ->link->attr(['class' => '']);
+
             $requestCount = Order::where('status', 'create')->count();
             $scheduleCount = Order::where(function ($q) {
                 $q->whereDate('pickup_point->start_time', '>', now()->toDateString())
@@ -82,16 +88,14 @@
                     ->link->attr(['class' => ''])
                     ->href('#order');
             }
-            $menu->order->add('<span>' . __('message.all_order') . '</span>', ['class' => 'sidebar-layout', 'route' => ['order.index', 'classic' => 1]])
+            $menu->order->add('<span>' . __('message.all_order') . '</span>', ['class' => 'sidebar-layout', 'route' => 'order.index'])
                 ->data('permission', 'order-list')
                 ->prepend('<i class="fa fa-list"></i>')
                 ->link->attr(['class' => '']);
 
-
-
-            $menu->order->add('<span>New Orders ShadCN</span>', ['class' => 'sidebar-layout', 'route' => 'new-orders-shadcn.index'])
+            $menu->order->add('<span>Classic Orders</span>', ['class' => 'sidebar-layout', 'route' => ['order.index', 'classic' => 1]])
                 ->data('permission', 'order-list')
-                ->prepend('<i class="fa fa-table-columns"></i>')
+                ->prepend('<i class="fa fa-table"></i>')
                 ->link->attr(['class' => '']);
             if ($scheduleCount == 0) {
                 $menu->order->add('<span>' . __('message.schedule_order') . '</span>', ['class' => 'sidebar-layout', 'route' => ['order.index', 'orders_type' => 'schedule']])
@@ -211,6 +215,11 @@
             $menu->users->add('<span>' . __('message.users') . '</span>', ['class' => request()->is('users/*/add') ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'users.index'])
                 ->data('permission', ['users-add', 'users-edit'])
                 ->prepend('<i class="fa fa-user-tie"></i>')
+                ->link->attr(['class' => '']);
+
+            $menu->users->add('<span>Classic Users</span>', ['class' => 'sidebar-layout', 'route' => ['users.index', 'classic' => 1]])
+                ->data('permission', 'users-list')
+                ->prepend('<i class="fa fa-table"></i>')
                 ->link->attr(['class' => '']);
 
             $menu->users->add(

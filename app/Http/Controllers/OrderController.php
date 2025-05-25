@@ -40,6 +40,7 @@ use App\Notifications\CustomerSupportNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -49,7 +50,7 @@ class OrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(OrderDataTable $dataTable)
+    public function index()
     {
         if (!auth()->user()->can('order-list')) {
             $message = __('message.demo_permission_denied');
@@ -58,7 +59,8 @@ class OrderController extends Controller
 
         // Use ShadCN table by default, unless classic view is requested
         if (request()->has('classic') && request()->classic == 1) {
-            // Continue with the original DataTable implementation
+            // For classic view, instantiate DataTable manually
+            $dataTable = new OrderDataTable();
             $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
             $auth_user = authSession();
             $assets = ['datatable'];
@@ -78,124 +80,65 @@ class OrderController extends Controller
 
             return $dataTable->render('global.order-filter', compact('pageTitle', 'auth_user', 'multi_checkbox_delete', 'params', 'reset_file_button', 'filter_file_button'));
         } else {
-            // Use ShadCN table
-            $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
-            $auth_user = authSession();
-            $assets = ['datatable'];
-
-            // Create button for admin
-            $button = '';
-            if ($auth_user->can('order-add')) {
-                $button = '<a href="' . route('order.create') . '" class="btn btn-added">
-                    <img src="' . asset('assets/img/icons/plus.svg') . '" alt="img" class="me-1">
-                    ' . __('message.add_new_order') . '
-                </a>';
-            }
-
-            // Build query with filters
-            $query = Order::query();
-
-            // Apply filters based on user type
-            if ($auth_user->user_type == 'client') {
-                $query->where('client_id', $auth_user->id);
-            } elseif ($auth_user->user_type == 'delivery_man') {
-                $query->where('deliveryman_id', $auth_user->id);
-            }
-
-            // Order ID filter
-            if (request()->has('order_id') && request('order_id') != '') {
-                $query->where('id', request('order_id'));
-            }
-
-            // Status filter
-            if (request()->has('status') && request('status') != '') {
-                $query->where('status', request('status'));
-            }
-
-            // Date range filter
-            if (request()->has('from_date') && request('from_date') != '' && request()->has('to_date') && request('to_date') != '') {
-                $query->whereBetween('created_at', [
-                    request('from_date') . ' 00:00:00',
-                    request('to_date') . ' 23:59:59'
-                ]);
-            } else if (request()->has('from_date') && request('from_date') != '') {
-                $query->whereDate('created_at', '>=', request('from_date'));
-            } else if (request()->has('to_date') && request('to_date') != '') {
-                $query->whereDate('created_at', '<=', request('to_date'));
-            }
-
-            // Customer filter
-            if (request()->has('client_id') && request('client_id') != '') {
-                $query->where('client_id', request('client_id'));
-            }
-
-            // Phone filter
-            if (request()->has('phone') && request('phone') != '') {
-                $query->where(function ($q) {
-                    $phone = request('phone');
-                    $q->where('phone', 'like', "%{$phone}%")
-                        ->orWhereHas('client', function ($q) use ($phone) {
-                            $q->where('phone', 'like', "%{$phone}%");
-                        });
-                });
-            }
-
-            // Pickup Location filter
-            if (request()->has('pickup_location') && request('pickup_location') != '') {
-                $location = request('pickup_location');
-                $query->where(function ($q) use ($location) {
-                    $q->whereRaw("JSON_EXTRACT(pickup_point, '$.address') LIKE ?", ["%{$location}%"])
-                        ->orWhereRaw("pickup_point LIKE ?", ["%{$location}%"]);
-                });
-            }
-
-            // Delivery Location filter
-            if (request()->has('delivery_location') && request('delivery_location') != '') {
-                $location = request('delivery_location');
-                $query->where(function ($q) use ($location) {
-                    $q->whereRaw("JSON_EXTRACT(delivery_point, '$.address') LIKE ?", ["%{$location}%"])
-                        ->orWhereRaw("delivery_point LIKE ?", ["%{$location}%"]);
-                });
-            }
-
-            // Payment Status filter
-            if (request()->has('payment_status') && request('payment_status') != '') {
-                $query->where('payment_status', request('payment_status'));
-            }
-
-            // Apply sorting
-            if (request()->has('sort') && request()->has('direction')) {
-                $sortColumn = request('sort');
-                $sortDirection = request('direction');
-
-                // Validate sort column to prevent SQL injection
-                $allowedColumns = ['id', 'created_at', 'status', 'client_id', 'payment_status'];
-                if (in_array($sortColumn, $allowedColumns)) {
-                    $query->orderBy($sortColumn, $sortDirection);
-                }
-            } else {
-                // Default sorting
-                $query->orderBy('created_at', 'desc');
-            }
-
-            // Get orders with pagination
-            $orders = $query->with(['client'])
-                ->paginate(10)
-                ->appends(request()->query());
-
-            // Handle AJAX requests
-            if (request()->ajax()) {
-                return view('orders.partials._table', compact('orders'))->render();
-            }
-
-            return view('orders.shadcn-index', compact(
-                'pageTitle',
-                'auth_user',
-                'assets',
-                'button',
-                'orders'
-            ));
+            // Use React/Inertia by default
+            return $this->indexInertia();
         }
+    }
+
+    /**
+     * Display orders using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function indexInertia()
+    {
+        if (!auth()->user()->can('order-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
+        $auth_user = authSession();
+        $assets = ['datatable'];
+
+        // Build query with filters
+        $query = Order::query();
+
+        // Apply filters based on user type
+        if ($auth_user->user_type == 'client') {
+            $query->where('client_id', $auth_user->id);
+        } elseif ($auth_user->user_type == 'delivery_man') {
+            $query->where('deliveryman_id', $auth_user->id);
+        }
+
+        // Apply all filters
+        $this->applyFilters($query);
+
+        // Get orders with pagination
+        $orders = $query->with(['client'])
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'order_type' => request('order_type'),
+            'status' => request('status'),
+            'date_start' => request('date_start'),
+            'date_end' => request('date_end'),
+            'client_id' => request('client_id'),
+            'phone' => request('phone'),
+            'pickup_location' => request('pickup_location'),
+            'delivery_location' => request('delivery_location'),
+            'payment_status' => request('payment_status'),
+        ];
+
+        return Inertia::render('Orders/Index', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'orders' => $orders,
+            'filters' => $filters,
+        ]);
     }
 
     /**
@@ -264,7 +207,92 @@ class OrderController extends Controller
         ));
     }
 
+    /**
+     * Apply filters to the query
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return void
+     */
+    private function applyFilters($query)
+    {
+        // Order ID filter
+        if (request()->has('order_id') && request('order_id') != '') {
+            $query->where('id', request('order_id'));
+        }
 
+        // Status filter
+        if (request()->has('status') && request('status') != '') {
+            $query->where('status', request('status'));
+        }
+
+        // Order type filter (maps to status)
+        if (request()->has('order_type') && request('order_type') != '') {
+            $query->where('status', request('order_type'));
+        }
+
+        // Date range filter
+        if (request()->has('date_start') && request('date_start') != '') {
+            $query->whereDate('created_at', '>=', request('date_start'));
+        }
+
+        if (request()->has('date_end') && request('date_end') != '') {
+            $query->whereDate('created_at', '<=', request('date_end'));
+        }
+
+        // Customer filter
+        if (request()->has('client_id') && request('client_id') != '') {
+            $query->where('client_id', request('client_id'));
+        }
+
+        // Phone filter
+        if (request()->has('phone') && request('phone') != '') {
+            $query->where(function ($q) {
+                $phone = request('phone');
+                $q->where('phone', 'like', "%{$phone}%")
+                    ->orWhereHas('client', function ($q) use ($phone) {
+                        $q->where('contact_number', 'like', "%{$phone}%");
+                    });
+            });
+        }
+
+        // Pickup Location filter
+        if (request()->has('pickup_location') && request('pickup_location') != '') {
+            $location = request('pickup_location');
+            $query->where(function ($q) use ($location) {
+                $q->whereRaw("JSON_EXTRACT(pickup_point, '$.address') LIKE ?", ["%{$location}%"])
+                    ->orWhereRaw("pickup_point LIKE ?", ["%{$location}%"]);
+            });
+        }
+
+        // Delivery Location filter
+        if (request()->has('delivery_location') && request('delivery_location') != '') {
+            $location = request('delivery_location');
+            $query->where(function ($q) use ($location) {
+                $q->whereRaw("JSON_EXTRACT(delivery_point, '$.address') LIKE ?", ["%{$location}%"])
+                    ->orWhereRaw("delivery_point LIKE ?", ["%{$location}%"]);
+            });
+        }
+
+        // Payment Status filter
+        if (request()->has('payment_status') && request('payment_status') != '') {
+            $query->where('payment_status', request('payment_status'));
+        }
+
+        // Apply sorting
+        if (request()->has('sort') && request()->has('direction')) {
+            $sortColumn = request('sort');
+            $sortDirection = request('direction');
+
+            // Validate sort column to prevent SQL injection
+            $allowedColumns = ['id', 'created_at', 'status', 'client_id', 'payment_status'];
+            if (in_array($sortColumn, $allowedColumns)) {
+                $query->orderBy($sortColumn, $sortDirection);
+            }
+        } else {
+            // Default sorting
+            $query->orderBy('created_at', 'desc');
+        }
+    }
 
     /**
      * Cache key for orders query
@@ -894,75 +922,7 @@ class OrderController extends Controller
         return $pdf->download('orders_export_' . date('Y-m-d_H-i-s') . '.pdf');
     }
 
-    /**
-     * Apply filters to query
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return void
-     */
-    private function applyFilters($query)
-    {
-        // Order ID filter
-        if (request()->has('order_id') && request('order_id') != '') {
-            $query->where('id', request('order_id'));
-        }
 
-        // Status filter
-        if (request()->has('status') && request('status') != '') {
-            $query->where('status', request('status'));
-        }
-
-        // Date range filter
-        if (request()->has('from_date') && request('from_date') != '' && request()->has('to_date') && request('to_date') != '') {
-            $query->whereBetween('created_at', [
-                request('from_date') . ' 00:00:00',
-                request('to_date') . ' 23:59:59'
-            ]);
-        } else if (request()->has('from_date') && request('from_date') != '') {
-            $query->whereDate('created_at', '>=', request('from_date'));
-        } else if (request()->has('to_date') && request('to_date') != '') {
-            $query->whereDate('created_at', '<=', request('to_date'));
-        }
-
-        // Customer filter
-        if (request()->has('client_id') && request('client_id') != '') {
-            $query->where('client_id', request('client_id'));
-        }
-
-        // Phone filter
-        if (request()->has('phone') && request('phone') != '') {
-            $query->where(function ($q) {
-                $phone = request('phone');
-                $q->where('phone', 'like', "%{$phone}%")
-                    ->orWhereHas('client', function ($q) use ($phone) {
-                        $q->where('phone', 'like', "%{$phone}%");
-                    });
-            });
-        }
-
-        // Pickup Location filter
-        if (request()->has('pickup_location') && request('pickup_location') != '') {
-            $location = request('pickup_location');
-            $query->where(function ($q) use ($location) {
-                $q->whereRaw("JSON_EXTRACT(pickup_point, '$.address') LIKE ?", ["%{$location}%"])
-                    ->orWhereRaw("pickup_point LIKE ?", ["%{$location}%"]);
-            });
-        }
-
-        // Delivery Location filter
-        if (request()->has('delivery_location') && request('delivery_location') != '') {
-            $location = request('delivery_location');
-            $query->where(function ($q) use ($location) {
-                $q->whereRaw("JSON_EXTRACT(delivery_point, '$.address') LIKE ?", ["%{$location}%"])
-                    ->orWhereRaw("delivery_point LIKE ?", ["%{$location}%"]);
-            });
-        }
-
-        // Payment Status filter
-        if (request()->has('payment_status') && request('payment_status') != '') {
-            $query->where('payment_status', request('payment_status'));
-        }
-    }
 
     public function orderprintindex(OrderPrintDataTable $dataTable)
     {
@@ -1372,6 +1332,13 @@ class OrderController extends Controller
                 $order->delete();
                 $deletedCount++;
             }
+        }
+
+        if (request()->ajax()) {
+            return response()->json([
+                'status' => true,
+                'message' => __('message.bulk_delete_success', ['count' => $deletedCount])
+            ]);
         }
 
         return redirect()->route('order.index')

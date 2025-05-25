@@ -8,9 +8,15 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class OrderModernController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:order-list')->only('index');
+    }
+
     /**
      * Display a listing of the orders with modern UI.
      *
@@ -26,7 +32,13 @@ class OrderModernController extends Controller
         }
 
         $pageTitle = __('message.modern_orders');
-        $auth_user = authSession();
+        $currentUser = auth()->user();
+        $auth_user_data = $currentUser ? [
+            'id' => $currentUser->id,
+            'name' => $currentUser->name,
+            'email' => $currentUser->email,
+            // Add any other specific user properties needed by the Index.jsx page
+        ] : null;
         $assets = ['datatable'];
 
         // Get customers for filter dropdown
@@ -57,7 +69,7 @@ class OrderModernController extends Controller
         }
 
         if ($request->has('payment_status') && !empty($request->payment_status)) {
-            $query->whereHas('payment', function($q) use ($request) {
+            $query->whereHas('payment', function ($q) use ($request) {
                 $q->where('payment_status', $request->payment_status);
             });
         }
@@ -68,13 +80,13 @@ class OrderModernController extends Controller
             ->paginate($perPage)
             ->appends($request->except('page'));
 
-        return view('admin.orders-modern.index', compact(
-            'pageTitle',
-            'auth_user',
-            'assets',
-            'orders',
-            'customers'
-        ));
+        return Inertia::render('Admin/OrdersModern/Index', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user_data,
+            'assets' => $assets,
+            'orders' => $orders,
+            'customers' => $customers,
+        ]);
     }
 
     /**
@@ -116,7 +128,7 @@ class OrderModernController extends Controller
         }
 
         if ($request->has('payment_status') && !empty($request->payment_status)) {
-            $query->whereHas('payment', function($q) use ($request) {
+            $query->whereHas('payment', function ($q) use ($request) {
                 $q->where('payment_status', $request->payment_status);
             });
         }
@@ -133,9 +145,9 @@ class OrderModernController extends Controller
             'Expires' => '0'
         ];
 
-        $callback = function() use ($orders) {
+        $callback = function () use ($orders) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($file, [
                 'Order ID',
@@ -148,12 +160,12 @@ class OrderModernController extends Controller
                 'Payment Status',
                 'Amount'
             ]);
-            
+
             // Add data
             foreach ($orders as $order) {
                 $pickupPoint = $order->pickup_point ? json_decode($order->pickup_point) : null;
                 $deliveryPoint = $order->delivery_point ? json_decode($order->delivery_point) : null;
-                
+
                 fputcsv($file, [
                     $order->id,
                     $order->date,
@@ -166,7 +178,7 @@ class OrderModernController extends Controller
                     $order->total_amount
                 ]);
             }
-            
+
             fclose($file);
         };
 

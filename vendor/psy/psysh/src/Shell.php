@@ -112,7 +112,7 @@ class Shell extends Application
     public static function isIncluded(array $trace): bool
     {
         $isIncluded = isset($trace[0]['function']) &&
-          \in_array($trace[0]['function'], ['require', 'include', 'require_once', 'include_once']);
+            \in_array($trace[0]['function'], ['require', 'include', 'require_once', 'include_once']);
 
         // Detect Composer PHP bin proxies.
         if ($isIncluded && \array_key_exists('_composer_autoload_path', $GLOBALS) && \preg_match('{[\\\\/]psysh$}', $trace[0]['file'])) {
@@ -555,7 +555,7 @@ class Shell extends Application
 
         $code = $this->codeBuffer;
         $code[] = $input;
-        $tokens = @\token_get_all('<?php '.\implode("\n", $code));
+        $tokens = @\token_get_all('<?php ' . \implode("\n", $code));
         $last = \array_pop($tokens);
 
         return $last === '"' || $last === '`' ||
@@ -618,7 +618,7 @@ class Shell extends Application
             $output = $output->getErrorOutput();
         }
 
-        $output->writeln(\sprintf('<whisper>%s</whisper>', OutputFormatter::escape($code)), ConsoleOutput::VERBOSITY_DEBUG);
+        $output->writeln(\sprintf('<whisper>%s</whisper>', OutputFormatter::escape($code)), OutputInterface::VERBOSITY_DEBUG);
 
         return $code;
     }
@@ -918,7 +918,7 @@ class Shell extends Application
         $command = $this->getCommand($input);
 
         if (empty($command)) {
-            throw new \InvalidArgumentException('Command not found: '.$input);
+            throw new \InvalidArgumentException('Command not found: ' . $input);
         }
 
         $input = new ShellInput(\str_replace('\\', '\\\\', \rtrim($input, " \t\n\r\0\x0B;")));
@@ -1169,11 +1169,11 @@ class Shell extends Application
             $formatted = $this->presentValue($ret);
             $formattedRetValue = \sprintf('<whisper>%s</whisper>', $prompt);
 
-            $formatted = $formattedRetValue.\str_replace(\PHP_EOL, \PHP_EOL.$indent, $formatted);
+            $formatted = $formattedRetValue . \str_replace(\PHP_EOL, \PHP_EOL . $indent, $formatted);
         }
 
         if ($this->output instanceof ShellOutput) {
-            $this->output->page($formatted.\PHP_EOL);
+            $this->output->page($formatted . \PHP_EOL);
         } else {
             $this->output->writeln($formatted);
         }
@@ -1281,7 +1281,7 @@ class Shell extends Application
         }
 
         // Ensures the given message only contains relative paths...
-        $message = \str_replace(\getcwd().\DIRECTORY_SEPARATOR, '', $message);
+        $message = \str_replace(\getcwd() . \DIRECTORY_SEPARATOR, '', $message);
 
         $severity = ($e instanceof \ErrorException) ? $this->getSeverity($e) : 'error';
 

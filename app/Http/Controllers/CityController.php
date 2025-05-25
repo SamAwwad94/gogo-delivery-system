@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\DataTables\CityDataTable;
 use App\Models\City;
 use App\Http\Requests\CityRequest;
+use Inertia\Inertia;
 
 
 class CityController extends Controller
@@ -21,15 +22,92 @@ class CityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        $pageTitle = __('message.list_form_title',['form' => __('message.city')] );
+
+        // Use React/Inertia by default, unless classic view is requested
+        if (request()->has('classic') && request()->classic == 1) {
+            // Continue with the original DataTable implementation
+            $pageTitle = __('message.list_form_title', ['form' => __('message.city')]);
+            $auth_user = authSession();
+            $assets = ['datatable'];
+
+            $multi_checkbox_delete = $auth_user->can('city-delete') ? '<button id="deleteSelectedBtn" checked-title = "city-checked " class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
+
+            $button = $auth_user->can('city-add') ? '<a href="' . route('city.create') . '" class="float-right btn btn-sm btn-primary"><i class="fa fa-plus-circle"></i> ' . __('message.add_form_title', ['form' => __('message.city')]) . '</a>' : '';
+
+            return $dataTable->render('global.datatable', compact('pageTitle', 'button', 'auth_user', 'multi_checkbox_delete'));
+        } else {
+            return $this->indexInertia();
+        }
+    }
+
+    /**
+     * Display cities using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function indexInertia()
+    {
+        if (!auth()->user()->can('city-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.city')]);
         $auth_user = authSession();
         $assets = ['datatable'];
 
-        $multi_checkbox_delete = $auth_user->can('city-delete') ? '<button id="deleteSelectedBtn" checked-title = "city-checked " class="float-left btn btn-sm ">'.__('message.delete_selected').'</button>' : '';
+        // Build query with filters
+        $query = City::with('country');
 
-        $button = $auth_user->can('city-add') ? '<a href="'.route('city.create').'" class="float-right btn btn-sm btn-primary"><i class="fa fa-plus-circle"></i> '.__('message.add_form_title',['form' => __('message.city')]).'</a>' : '';
+        // Apply filters
+        $this->applyCitiesFilters($query);
 
-        return $dataTable->render('global.datatable', compact('pageTitle','button','auth_user','multi_checkbox_delete'));
+        // Get cities with pagination
+        $cities = $query->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'status' => request('status'),
+            'country_id' => request('country_id'),
+            'search' => request('search'),
+        ];
+
+        return Inertia::render('Cities/Index', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'cities' => $cities,
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Apply filters to the cities query
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return void
+     */
+    private function applyCitiesFilters($query)
+    {
+        // Status filter
+        if (request()->has('status') && request('status') != '') {
+            $query->where('status', request('status'));
+        }
+
+        // Country filter
+        if (request()->has('country_id') && request('country_id') != '') {
+            $query->where('country_id', request('country_id'));
+        }
+
+        // Search filter
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
     }
 
     /**
@@ -43,7 +121,7 @@ class CityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        $pageTitle = __('message.add_form_title',[ 'form' => __('message.city')]);
+        $pageTitle = __('message.add_form_title', ['form' => __('message.city')]);
 
         return view('city.form', compact('pageTitle'));
     }
@@ -58,18 +136,18 @@ class CityController extends Controller
     {
         $data = $request->all();
 
-        if($request->is('api/*')) {
+        if ($request->is('api/*')) {
             $result = City::updateOrCreate(['id' => $request->id], $data);
-            $message = __('message.update_form',[ 'form' => __('message.city') ] );
-            if($result->wasRecentlyCreated){
-                $message = __('message.save_form',[ 'form' => __('message.city') ] );
+            $message = __('message.update_form', ['form' => __('message.city')]);
+            if ($result->wasRecentlyCreated) {
+                $message = __('message.save_form', ['form' => __('message.city')]);
             }
 
             return json_message_response($message);
-		} else {
+        } else {
             $city = City::create($data);
-		    $message = __('message.save_form',[ 'form' => __('message.city') ] );
-		}
+            $message = __('message.save_form', ['form' => __('message.city')]);
+        }
         return redirect()->route('city.index')->withSuccess($message);
     }
 
@@ -81,7 +159,7 @@ class CityController extends Controller
      */
     public function show($id)
     {
-        $pageTitle = __('message.add_form_title',[ 'form' => __('message.city')]);
+        $pageTitle = __('message.add_form_title', ['form' => __('message.city')]);
         $data = City::findOrFail($id);
 
         return view('city.show', compact('data'));
@@ -99,7 +177,7 @@ class CityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        $pageTitle = __('message.update_form_title',[ 'form' => __('message.city')]);
+        $pageTitle = __('message.update_form_title', ['form' => __('message.city')]);
         $data = City::findOrFail($id);
 
         return view('city.form', compact('data', 'pageTitle', 'id'));
@@ -120,16 +198,16 @@ class CityController extends Controller
         }
         $city = City::find($id);
         $message = __('message.not_found_entry', ['name' => __('message.city')]);
-        if($city == null) {
-            return response()->json(['status' => false, 'message' => $message ]);
+        if ($city == null) {
+            return response()->json(['status' => false, 'message' => $message]);
         }
         $message = __('message.update_form', ['form' => __('message.city')]);
         $city->fill($request->all())->update();
 
-        if(request()->is('api/*')){
-            return response()->json(['status' => true, 'message' => $message ]);
+        if (request()->is('api/*')) {
+            return response()->json(['status' => true, 'message' => $message]);
         }
-        if(auth()->check()){
+        if (auth()->check()) {
             return redirect()->route('city.index')->withSuccess($message);
         }
         return redirect()->back()->withSuccess($message);
@@ -147,12 +225,12 @@ class CityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        if(env('APP_DEMO')){
+        if (env('APP_DEMO')) {
             $message = __('message.demo_permission_denied');
-            if(request()->is('api/*')){
-                return response()->json(['status' => true, 'message' => $message ]);
+            if (request()->is('api/*')) {
+                return response()->json(['status' => true, 'message' => $message]);
             }
-            if(request()->ajax()) {
+            if (request()->ajax()) {
                 return response()->json(['status' => false, 'message' => $message, 'event' => 'validation']);
             }
             return redirect()->route('city.index')->withErrors($message);
@@ -161,49 +239,49 @@ class CityController extends Controller
         $status = 'error';
         $message = __('message.not_found_entry', ['name' => __('message.city')]);
 
-        if($city != '') {
+        if ($city != '') {
             $city->delete();
             $status = 'success';
             $message = __('message.delete_form', ['form' => __('message.city')]);
         }
 
-        if(request()->is('api/*')){
-            return response()->json(['status' => true, 'message' => $message ]);
+        if (request()->is('api/*')) {
+            return response()->json(['status' => true, 'message' => $message]);
         }
-        if(request()->ajax()) {
-            return response()->json(['status' => true, 'message' => $message ]);
+        if (request()->ajax()) {
+            return response()->json(['status' => true, 'message' => $message]);
         }
 
-        return redirect()->back()->with($status,$message);
+        return redirect()->back()->with($status, $message);
     }
 
     public function action(Request $request)
     {
         $id = $request->id;
-        $city = City::withTrashed()->where('id',$id)->first();
-        $message = __('message.not_found_entry',['name' => __('message.city')] );
-        if($request->type === 'restore'){
+        $city = City::withTrashed()->where('id', $id)->first();
+        $message = __('message.not_found_entry', ['name' => __('message.city')]);
+        if ($request->type === 'restore') {
             $city->restore();
-            $message = __('message.msg_restored',['name' => __('message.city')] );
+            $message = __('message.msg_restored', ['name' => __('message.city')]);
         }
 
-        if($request->type === 'forcedelete'){
-            if(env('APP_DEMO')){
+        if ($request->type === 'forcedelete') {
+            if (env('APP_DEMO')) {
                 $message = __('message.demo_permission_denied');
-                if(request()->is('api/*')){
-                    return response()->json(['status' => true, 'message' => $message ]);
+                if (request()->is('api/*')) {
+                    return response()->json(['status' => true, 'message' => $message]);
                 }
-                if(request()->ajax()) {
+                if (request()->ajax()) {
                     return response()->json(['status' => false, 'message' => $message, 'event' => 'validation']);
                 }
                 return redirect()->route('city.index')->withErrors($message);
             }
             $city->forceDelete();
-            $message = __('message.msg_forcedelete',['name' => __('message.city')] );
+            $message = __('message.msg_forcedelete', ['name' => __('message.city')]);
         }
 
-        if(request()->is('api/*')){
-            return response()->json(['status' => true, 'message' => $message ]);
+        if (request()->is('api/*')) {
+            return response()->json(['status' => true, 'message' => $message]);
         }
 
         return redirect()->route('city.index')->withSuccess($message);

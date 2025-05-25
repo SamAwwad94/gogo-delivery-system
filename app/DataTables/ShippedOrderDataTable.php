@@ -11,128 +11,106 @@ use Carbon\Carbon;
 class ShippedOrderDataTable extends DataTable
 {
     use DataTableTrait;
-    /**
-     * Build DataTable class.
-     *
-     * @param mixed $query Results from query() method.
-     * @return \Yajra\DataTables\DataTableAbstract
-     */
+
     public function dataTable($query)
     {
         return datatables()
             ->eloquent($query)
-            ->addColumn('checkbox', function ($row) {
-                return '<input type="checkbox" class=" select-table-row-checked-values" id="datatable-row-' . $row->id . '" name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
-            })
-            ->editColumn('created_at', function ($query) {
-                return dateAgoFormate($query->created_at, true);
-            })
-
-
-            ->addColumn('invoice', function ($query) {
-                return $query ? '<a href="' . route('order-invoice', $query->id) . '"><i class="fa fa-download"></i></a>' : 'N/A';
-            })
-
-            ->editColumn('milisecond', function($row) {
-                $set_ids = $row->milisecond ?? '-';
-                return $set_ids;
-            })
-
-            ->order(function ($query) {
-                if (request()->has('order')) {
-                    $order = request()->order[0];
-                    $column_index = $order['column'];
-
-                    $column_name = 'id';
-                    $direction = 'desc';
-                    if ($column_index != 0) {
-                        $column_name = request()->columns[$column_index]['data'];
-                        $direction = $order['dir'];
-                    }
-
-                    $query->orderBy($column_name, $direction);
-                }
-            })
-            ->editColumn('id', function ($row) {
-                $user = $row->id;
-                return $user ? '<a href="' . route('order.show', $user) . '">' . $user . '</a>' : '-' ;
-            })
-            ->addColumn('name', function ($row) {
-                $user = optional($row->couriercompany)->name;
-                return $user ?? '-' ;
-            })
-            ->addColumn('link', function ($row) {
-                $courierLink = $row->courierCompany->link ?? '-';
-                return $courierLink ? '<a href="' . $courierLink . '" target="_blank">' . $courierLink . '</a>' : '-';
-            })
+            ->addColumn(
+                'checkbox',
+                fn($row) =>
+                '<input type="checkbox" class="select-table-row-checked-values" id="datatable-row-' . $row->id . '" name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">'
+            )
+            ->editColumn('created_at', fn($query) => dateAgoFormate($query->created_at, true))
+            ->addColumn(
+                'invoice',
+                fn($query) =>
+                $query ? '<a href="' . route('order-invoice', $query->id) . '"><i class="fa fa-download"></i></a>' : 'N/A'
+            )
+            ->editColumn('milisecond', fn($row) => $row->milisecond ?? '-')
+            ->editColumn(
+                'id',
+                fn($row) =>
+                $row->id ? '<a href="' . route('order.show', $row->id) . '">' . $row->id . '</a>' : '-'
+            )
+            ->addColumn(
+                'name',
+                fn($row) =>
+                optional($row->courierCompany)->name ?? '-'
+            )
+            ->addColumn(
+                'link',
+                fn($row) =>
+                $row->courierCompany && $row->courierCompany->link
+                ? '<a href="' . $row->courierCompany->link . '" target="_blank">' . $row->courierCompany->link . '</a>'
+                : '-'
+            )
             ->addColumn('action', function ($order) {
-                $id = $order->id;
-                $delete_at = $order->deleted_at;
-                return view('order.action', compact('id', 'delete_at', 'order'))->render();
+                return '<div data-order-actions=\'' . json_encode([
+                    'id' => $order->id,
+                    'deletedAt' => $order->deleted_at,
+                    'status' => $order->status,
+                    'canEdit' => auth()->user()->can('order-edit'),
+                    'canDelete' => auth()->user()->can('order-delete'),
+                    'canShow' => auth()->user()->can('order-show'),
+                    'userRoles' => auth()->user()->getRoleNames()->toArray(),
+                ]) . '\'></div>';
             })
-
             ->addIndexColumn()
-            ->rawColumns(['action', 'status', 'checkbox', 'pickup_point', 'delivery_point', 'invoice', 'delivery_man_id', 'client_id','id','assign','parent_order_id','link']);
+            ->rawColumns([
+                'action',
+                'checkbox',
+                'invoice',
+                'id',
+                'name',
+                'link'
+            ]);
     }
 
-    /**
-     * Get query source of dataTable.
-     *
-     * @param \App\Models\Order $model
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
     public function query(Order $model)
     {
         $auth = auth()->user();
-        $query = $model->newQuery()->where('status','shipped');
+        $query = $model->newQuery()->where('status', 'shipped');
 
-        $filter_status = request()->input('status');
-        $filter_from_date = request()->input('from_date');
-        $filter_to_date = request()->input('to_date');
-        $filter_city = request()->input('city_id');
-        $filter_country = request()->input('country_id');
-
-        if ($filter_status) {
-            $query->where('status', $filter_status);
-        }
-        if ($filter_city) {
-            $query->where('city_id', $filter_city);
-        }
-        if ($filter_country) {
-            $query->where('country_id', $filter_country);
+        if ($status = request()->input('status')) {
+            $query->where('status', $status);
         }
 
-        if ($filter_from_date && $filter_to_date) {
-            $query->whereBetween('created_at', [$filter_from_date, $filter_to_date]);
+        if ($city = request()->input('city_id')) {
+            $query->where('city_id', $city);
         }
 
-        if ($auth->user_type == 'client') {
+        if ($country = request()->input('country_id')) {
+            $query->where('country_id', $country);
+        }
+
+        if ($from = request()->input('from_date') && $to = request()->input('to_date')) {
+            $query->whereBetween('created_at', [$from, $to]);
+        }
+
+        if ($auth->user_type === 'client') {
             $query->where('client_id', $auth->id);
         }
 
         return $query->withTrashed();
     }
 
-    /**
-     * Get columns.
-     *
-     * @return array
-     */
     protected function getColumns()
     {
         $prefix = strtoupper(appSettingcurrency('prefix'));
+
         return [
             Column::make('checkbox')
                 ->searchable(false)
-                ->title('<input type="checkbox" class ="select-all-table" name="select_all" id="select-all-table">')
+                ->title('<input type="checkbox" class="select-all-table" name="select_all" id="select-all-table">')
                 ->orderable(false)
                 ->width(20),
-            ['data' => 'milisecond', 'name' => 'milisecond',  'title' => $prefix .' #' ?? __('message.document_at')],
+            ['data' => 'milisecond', 'name' => 'milisecond', 'title' => $prefix . ' #'],
             ['data' => 'id', 'name' => 'id', 'title' => __('message.order_id')],
             ['data' => 'name', 'name' => 'name', 'title' => __('message.company_name')],
             ['data' => 'link', 'name' => 'link', 'title' => __('message.traking_link')],
-            ['data' => 'date', 'name' => 'date', 'title' => __('message.date')],
-            ['data' => 'invoice', 'name' => 'invoice', 'title' => __('message.invoice'),'orderable' => false],
+            ['data' => 'created_at', 'name' => 'created_at', 'title' => __('message.date')],
+            ['data' => 'invoice', 'name' => 'invoice', 'title' => __('message.invoice'), 'orderable' => false],
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)
