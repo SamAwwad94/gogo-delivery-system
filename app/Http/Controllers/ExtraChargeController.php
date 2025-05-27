@@ -16,7 +16,7 @@ class ExtraChargeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(ExtraChargeDataTable $dataTable)
+    public function dataTableIndex(ExtraChargeDataTable $dataTable)
     {
         if (!auth()->user()->can('extracharge-list')) {
             $message = __('message.demo_permission_denied');

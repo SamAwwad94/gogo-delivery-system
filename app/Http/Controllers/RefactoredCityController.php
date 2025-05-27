@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Services\CityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class RefactoredCityController extends Controller
 {
@@ -30,37 +31,36 @@ class RefactoredCityController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param CityDataTable $dataTable
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Inertia\Response
      */
-    public function index(CityDataTable $dataTable)
+    public function index()
     {
         if (!auth()->user()->can('city-list')) {
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
 
-        // Use ShadCN table by default, unless classic view is requested
+        // Use Inertia/React by default, unless classic view is requested
         if (request()->has('classic') && request()->classic == 1) {
             // Continue with the original DataTable implementation
+            $dataTable = new CityDataTable();
+            $pageTitle = __('message.list_form_title', ['form' => __('message.city')]);
+            $auth_user = authSession();
+            $assets = ['datatable'];
+
+            $multi_checkbox_delete = $auth_user->can('city-delete') ? '<button id="deleteSelectedBtn" checked-title="city-checked" class="float-left btn btn-sm">' . __('message.delete_selected') . '</button>' : '';
+            $button = $auth_user->can('city-add') ? '<a href="' . route('refactored-city.create') . '" class="float-right btn btn-sm btn-primary"><i class="fa fa-plus-circle"></i> ' . __('message.add_form_title', ['form' => __('message.city')]) . '</a>' : '';
+
+            return $dataTable->render('global.datatable', compact('pageTitle', 'button', 'auth_user', 'multi_checkbox_delete'));
         } else {
             return $this->shadcnIndex();
         }
-
-        $pageTitle = __('message.list_form_title', ['form' => __('message.city')]);
-        $auth_user = authSession();
-        $assets = ['datatable'];
-
-        $multi_checkbox_delete = $auth_user->can('city-delete') ? '<button id="deleteSelectedBtn" checked-title="city-checked" class="float-left btn btn-sm">' . __('message.delete_selected') . '</button>' : '';
-        $button = $auth_user->can('city-add') ? '<a href="' . route('refactored-city.create') . '" class="float-right btn btn-sm btn-primary"><i class="fa fa-plus-circle"></i> ' . __('message.add_form_title', ['form' => __('message.city')]) . '</a>' : '';
-
-        return $dataTable->render('global.datatable', compact('pageTitle', 'button', 'auth_user', 'multi_checkbox_delete'));
     }
 
     /**
-     * Display a listing of cities with ShadCN styling.
+     * Display a listing of cities with Inertia/React.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Inertia\Response
      */
     public function shadcnIndex()
     {
@@ -78,11 +78,20 @@ class RefactoredCityController extends Controller
 
         $cities = $this->cityService->getAllCities($perPage, $filters);
 
-        // Create buttons
-        $multi_checkbox_delete = $auth_user->can('city-delete') ? '<button id="deleteSelectedBtn" checked-title="city-checked" class="shadcn-button shadcn-button-destructive text-sm h-9 px-4 py-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> ' . __('message.delete_selected') . '</button>' : '';
-        $button = $auth_user->can('city-add') ? '<a href="' . route('refactored-city.create') . '" class="shadcn-button shadcn-button-primary text-sm h-9 px-4 py-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg> ' . __('message.add_form_title', ['form' => __('message.city')]) . '</a>' : '';
+        // Prepare filters for React component
+        $reactFilters = [
+            'status' => request('status'),
+            'country_id' => request('country_id'),
+            'search' => request('search'),
+        ];
 
-        return view('city.shadcn-cities', compact('pageTitle', 'auth_user', 'assets', 'cities', 'button', 'multi_checkbox_delete'));
+        return Inertia::render('Cities/City', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'cities' => $cities,
+            'filters' => $reactFilters,
+        ]);
     }
 
     /**
@@ -113,22 +122,22 @@ class RefactoredCityController extends Controller
         try {
             // Get validated data
             $data = $request->validated();
-            
+
             // Create the city using the service
             $city = $this->cityService->createCity($data);
-            
+
             $message = __('message.save_form', ['form' => __('message.city')]);
-            
+
             if ($request->is('api/*')) {
                 return json_message_response($message);
             }
-            
+
             return redirect()->route('refactored-city.index')->withSuccess($message);
         } catch (\Exception $e) {
             if ($request->is('api/*')) {
                 return json_custom_response(['error' => $e->getMessage()], 500);
             }
-            
+
             return redirect()->back()->withErrors($e->getMessage());
         }
     }
@@ -144,7 +153,7 @@ class RefactoredCityController extends Controller
         try {
             $pageTitle = __('message.view_form_title', ['form' => __('message.city')]);
             $data = City::findOrFail($id);
-            
+
             return view('city.show', compact('data', 'pageTitle'));
         } catch (\Exception $e) {
             return redirect()->back()->withErrors($e->getMessage());
@@ -163,11 +172,11 @@ class RefactoredCityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        
+
         try {
             $pageTitle = __('message.update_form_title', ['form' => __('message.city')]);
             $data = City::findOrFail($id);
-            
+
             return view('city.form', compact('data', 'pageTitle', 'id'));
         } catch (\Exception $e) {
             return redirect()->back()->withErrors($e->getMessage());
@@ -187,26 +196,26 @@ class RefactoredCityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        
+
         try {
             // Get validated data
             $data = $request->validated();
-            
+
             // Update the city using the service
             $city = $this->cityService->updateCity($id, $data);
-            
+
             $message = __('message.update_form', ['form' => __('message.city')]);
-            
+
             if ($request->is('api/*')) {
                 return json_message_response($message);
             }
-            
+
             return redirect()->route('refactored-city.index')->withSuccess($message);
         } catch (\Exception $e) {
             if ($request->is('api/*')) {
                 return json_custom_response(['error' => $e->getMessage()], 500);
             }
-            
+
             return redirect()->back()->withErrors($e->getMessage());
         }
     }
@@ -223,7 +232,7 @@ class RefactoredCityController extends Controller
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
-        
+
         if (env('APP_DEMO')) {
             $message = __('message.demo_permission_denied');
             if (request()->is('api/*')) {
@@ -234,37 +243,37 @@ class RefactoredCityController extends Controller
             }
             return redirect()->route('refactored-city.index')->withErrors($message);
         }
-        
+
         try {
             DB::beginTransaction();
-            
+
             // Delete the city using the service
             $result = $this->cityService->deleteCity($id);
-            
+
             DB::commit();
-            
+
             $message = __('message.delete_form', ['form' => __('message.city')]);
-            
+
             if (request()->is('api/*')) {
                 return response()->json(['status' => true, 'message' => $message]);
             }
-            
+
             if (request()->ajax()) {
                 return response()->json(['status' => true, 'message' => $message]);
             }
-            
+
             return redirect()->route('refactored-city.index')->withSuccess($message);
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             if (request()->is('api/*')) {
                 return json_custom_response(['error' => $e->getMessage()], 500);
             }
-            
+
             if (request()->ajax()) {
                 return response()->json(['status' => false, 'message' => $e->getMessage()]);
             }
-            
+
             return redirect()->back()->withErrors($e->getMessage());
         }
     }
@@ -280,7 +289,7 @@ class RefactoredCityController extends Controller
         $id = $request->id;
         $city = City::withTrashed()->where('id', $id)->first();
         $message = __('message.not_found_entry', ['name' => __('message.city')]);
-        
+
         if ($request->type === 'restore') {
             try {
                 $result = $this->cityService->restoreCity($id);
@@ -289,7 +298,7 @@ class RefactoredCityController extends Controller
                 return redirect()->back()->withErrors($e->getMessage());
             }
         }
-        
+
         if ($request->type === 'forcedelete') {
             if (env('APP_DEMO')) {
                 $message = __('message.demo_permission_denied');
@@ -301,7 +310,7 @@ class RefactoredCityController extends Controller
                 }
                 return redirect()->route('refactored-city.index')->withErrors($message);
             }
-            
+
             try {
                 $result = $this->cityService->forceDeleteCity($id);
                 $message = __('message.msg_forcedelete', ['name' => __('message.city')]);
@@ -309,11 +318,11 @@ class RefactoredCityController extends Controller
                 return redirect()->back()->withErrors($e->getMessage());
             }
         }
-        
+
         if (request()->is('api/*')) {
             return response()->json(['status' => true, 'message' => $message]);
         }
-        
+
         return redirect()->route('refactored-city.index')->withSuccess($message);
     }
 }

@@ -16,7 +16,7 @@ class CityController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(CityDataTable $dataTable)
+    public function dataTableIndex(CityDataTable $dataTable)
     {
         if (!auth()->user()->can('city-list')) {
             $message = __('message.demo_permission_denied');

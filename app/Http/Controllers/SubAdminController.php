@@ -15,7 +15,7 @@ class SubAdminController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(SubAdminDataTable $dataTable)
+    public function dataTableIndex(SubAdminDataTable $dataTable)
     {
         if (!auth()->user()->can('subadmin-list')) {
             $message = __('message.demo_permission_denied');

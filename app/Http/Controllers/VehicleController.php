@@ -15,7 +15,7 @@ class VehicleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(VehicleDataTable $dataTable)
+    public function dataTableIndex(VehicleDataTable $dataTable)
     {
         if (!auth()->user()->can('vehicle-list')) {
             $message = __('message.demo_permission_denied');

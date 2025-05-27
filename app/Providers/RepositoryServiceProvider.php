@@ -19,7 +19,7 @@ use App\Models\Country;
 use App\Models\Payment;
 use App\Models\Vehicle;
 use App\Models\Wallet;
-use App\Services\OrderService;
+use App\Services\Orders\OrderService;
 use App\Services\UserService;
 use App\Services\CityService;
 use App\Services\CountryService;

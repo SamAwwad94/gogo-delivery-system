@@ -74,10 +74,18 @@ window.route = (
 createInertiaApp({
     title: (title) => `${title} - Gogo Delivery`,
     resolve: (name) => {
-        const pages = import.meta.glob("./Pages/**/*.tsx", {
+        const tsxPages = import.meta.glob("./Pages/**/*.tsx", {
             eager: true,
         }) as Record<string, any>;
-        return pages[`./Pages/${name}.tsx`];
+        const jsxPages = import.meta.glob("./Pages/**/*.jsx", {
+            eager: true,
+        }) as Record<string, any>;
+
+        // Combine both TSX and JSX pages
+        const pages = { ...tsxPages, ...jsxPages };
+
+        // Try to find the page with .tsx extension first, then .jsx
+        return pages[`./Pages/${name}.tsx`] || pages[`./Pages/${name}.jsx`];
     },
     setup({ el, App, props }) {
         const root = createRoot(el);

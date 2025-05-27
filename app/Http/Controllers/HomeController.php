@@ -51,11 +51,11 @@ class HomeController extends Controller
     /*
      * Dashboard Pages Routs
      */
-    public function index(Request $request)
+    public function index()
     {
         // Use ShadCN table by default, unless classic view is requested
         if (!request()->has('classic') || request()->classic != 1) {
-            return $this->shadcnIndex($request);
+            return $this->shadcnIndex(request());
         }
 
         $auth_user = auth()->user();

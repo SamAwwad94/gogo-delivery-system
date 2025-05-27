@@ -924,12 +924,18 @@ class OrderController extends Controller
 
 
 
-    public function orderprintindex(OrderPrintDataTable $dataTable)
+    public function orderprintindex(Request $request)
     {
+        // Check if Inertia request or classic view is requested
+        if (!$request->has('classic') || $request->classic != 1) {
+            return $this->orderprintindexInertia();
+        }
+
+        // For classic view, instantiate DataTable manually
+        $dataTable = new OrderPrintDataTable();
         $pageTitle = __('message.list_form_title', ['form' => __('message.print_order')]);
         $auth_user = authSession();
         $assets = ['datatable'];
-
 
         $multi_checkbox_print = $auth_user->can('order-list')
             ? '<div class="btn-group">
@@ -945,6 +951,63 @@ class OrderController extends Controller
             : '';
 
         return $dataTable->render('global.order-filter', compact('pageTitle', 'auth_user', 'multi_checkbox_print'));
+    }
+
+    /**
+     * Display print orders using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function orderprintindexInertia()
+    {
+        if (!auth()->user()->can('order-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.print_order')]);
+        $auth_user = authSession();
+        $assets = ['datatable'];
+
+        // Build query with filters
+        $query = Order::query();
+
+        // Apply filters based on user type
+        if ($auth_user->user_type == 'client') {
+            $query->where('client_id', $auth_user->id);
+        } elseif ($auth_user->user_type == 'delivery_man') {
+            $query->where('deliveryman_id', $auth_user->id);
+        }
+
+        // Apply all filters
+        $this->applyFilters($query);
+
+        // Get orders with pagination
+        $orders = $query->with(['client'])
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'order_type' => request('order_type'),
+            'status' => request('status'),
+            'date_start' => request('date_start'),
+            'date_end' => request('date_end'),
+            'client_id' => request('client_id'),
+            'phone' => request('phone'),
+            'pickup_location' => request('pickup_location'),
+            'delivery_location' => request('delivery_location'),
+            'payment_status' => request('payment_status'),
+        ];
+
+        return Inertia::render('Orders/PrintIndex', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'orders' => $orders,
+            'filters' => $filters,
+            'canPrint' => $auth_user->can('order-list'),
+        ]);
     }
 
     /**
@@ -2017,14 +2080,78 @@ class OrderController extends Controller
         }
         return redirect()->back()->with('success', $message);
     }
-    public function shippedOrder(ShippedOrderDataTable $datatable)
+    public function shippedOrder(Request $request)
     {
+        // Check if Inertia request or classic view is requested
+        if (!$request->has('classic') || $request->classic != 1) {
+            return $this->shippedOrderInertia();
+        }
+
+        // For classic view, instantiate DataTable manually
+        $datatable = new ShippedOrderDataTable();
         $pageTitle = __('message.list_form_title', ['form' => __('message.shipped_order')]);
         $auth_user = authSession();
         $assets = ['datatable'];
         $params = null;
         $multi_checkbox_delete = $auth_user->can('order-delete') ? '<button id="deleteSelectedBtn" checked-title = "order-checked " class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
         return $datatable->render('global.order-filter', compact('pageTitle', 'auth_user', 'params', 'multi_checkbox_delete'));
+    }
+
+    /**
+     * Display shipped orders using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function shippedOrderInertia()
+    {
+        if (!auth()->user()->can('order-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.shipped_order')]);
+        $auth_user = authSession();
+        $assets = ['datatable'];
+
+        // Build query with filters
+        $query = Order::query()->where('status', 'shipped');
+
+        // Apply filters based on user type
+        if ($auth_user->user_type == 'client') {
+            $query->where('client_id', $auth_user->id);
+        } elseif ($auth_user->user_type == 'delivery_man') {
+            $query->where('deliveryman_id', $auth_user->id);
+        }
+
+        // Apply all filters
+        $this->applyFilters($query);
+
+        // Get orders with pagination
+        $orders = $query->with(['client'])
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'order_type' => request('order_type'),
+            'status' => request('status'),
+            'date_start' => request('date_start'),
+            'date_end' => request('date_end'),
+            'client_id' => request('client_id'),
+            'phone' => request('phone'),
+            'pickup_location' => request('pickup_location'),
+            'delivery_location' => request('delivery_location'),
+            'payment_status' => request('payment_status'),
+        ];
+
+        return Inertia::render('Orders/ShippedIndex', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'orders' => $orders,
+            'filters' => $filters,
+            'canDelete' => $auth_user->can('order-delete'),
+        ]);
     }
 
     public function deliveryManVehiclehistory(Request $request)
@@ -2079,8 +2206,15 @@ class OrderController extends Controller
 
         return json_custom_response($response);
     }
-    public function clientOrderdatatable(ClientOrderDataTable $datatable)
+    public function clientOrderdatatable(Request $request)
     {
+        // Check if Inertia request or classic view is requested
+        if (!$request->has('classic') || $request->classic != 1) {
+            return $this->clientOrderdatatableInertia();
+        }
+
+        // For classic view, instantiate DataTable manually
+        $datatable = new ClientOrderDataTable();
         $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
         $auth_user = authSession();
         $assets = ['datatable'];
@@ -2098,6 +2232,66 @@ class OrderController extends Controller
         $reset_file_button = '<a href="' . route('order.index') . '" class="float-right mr-1 mt-0 mb-1 btn btn-sm btn-info text-dark mt-1 pt-1 pb-1"><i class="ri-repeat-line" style="font-size:12px"></i> ' . __('message.reset_filter') . '</a>';
         $multi_checkbox_delete = $auth_user->can('order-delete') ? '<button id="deleteSelectedBtn" checked-title = "order-checked " class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
         return $datatable->render('global.order-filter', compact('pageTitle', 'auth_user', 'params', 'multi_checkbox_delete', 'filter_file_button', 'reset_file_button'));
+    }
+
+    /**
+     * Display client orders using Inertia/React
+     *
+     * @return \Inertia\Response
+     */
+    public function clientOrderdatatableInertia()
+    {
+        if (!auth()->user()->can('order-list')) {
+            $message = __('message.demo_permission_denied');
+            return redirect()->back()->withErrors($message);
+        }
+
+        $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
+        $auth_user = authSession();
+        $assets = ['datatable'];
+
+        // Build query with filters
+        $query = Order::query();
+
+        // For client orders, ensure we're only showing orders for the current client
+        if ($auth_user->user_type == 'client') {
+            $query->where('client_id', $auth_user->id);
+        } else {
+            // If not a client, ensure we're only showing orders that have a client
+            $query->whereNotNull('client_id');
+        }
+
+        // Apply all filters
+        $this->applyFilters($query);
+
+        // Get orders with pagination
+        $orders = $query->with(['client'])
+            ->paginate(15)
+            ->appends(request()->query());
+
+        // Prepare filters for React component
+        $filters = [
+            'order_type' => request('order_type'),
+            'status' => request('status'),
+            'date_start' => request('date_start') ?? request('from_date'),
+            'date_end' => request('date_end') ?? request('to_date'),
+            'client_id' => request('client_id'),
+            'phone' => request('phone'),
+            'pickup_location' => request('pickup_location'),
+            'delivery_location' => request('delivery_location'),
+            'payment_status' => request('payment_status'),
+            'city_id' => request('city_id'),
+            'country_id' => request('country_id'),
+        ];
+
+        return Inertia::render('Orders/ClientIndex', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'orders' => $orders,
+            'filters' => $filters,
+            'canDelete' => $auth_user->can('order-delete'),
+        ]);
     }
 
     public function applyBidOrder(Request $request)

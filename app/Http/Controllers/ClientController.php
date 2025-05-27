@@ -28,7 +28,7 @@ class ClientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(ClientDataTable $dataTable)
+    public function dataTableIndex(ClientDataTable $dataTable)
     {
         if (!auth()->user()->can('users-list')) {
             $message = __('message.demo_permission_denied');

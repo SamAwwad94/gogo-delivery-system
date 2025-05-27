@@ -45,13 +45,6 @@
                 utilsScript: "{{ asset('vendor/intlTelInput/js/utils.js') }}" // just for formatting/placeholders etc
             });
 
-            input.addEventListener("countrychange", function () {
-                validate();
-            });
-
-            // // here, the index maps to the error code returned from getValidationError - see readme
-            var errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
-            //
             // // initialise plugin
             const phone = $('#phone');
             const err = $('#error-msg');

@@ -15,7 +15,7 @@ class DocumentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(DocumentDataTable  $dataTable)
+    public function dataTableIndex(DocumentDataTable  $dataTable)
     {
         $pageTitle = __('message.list_form_title', ['form' => __('message.document')]);
         $auth_user = authSession();

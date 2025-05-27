@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import Select from 'react-select';
+import Swal from 'sweetalert2';
 
 interface User {
     id: number;
@@ -75,7 +77,7 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...currentFilters, [key]: value };
         setCurrentFilters(newFilters);
-        
+
         // Apply filters
         router.get(route('users.index'), newFilters, {
             preserveState: true,
@@ -103,30 +105,45 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
     // Handle bulk actions
     const handleBulkDelete = () => {
         if (selectedUsers.length === 0) return;
-        
-        if (confirm(`Are you sure you want to delete ${selectedUsers.length} users?`)) {
-            router.delete(route('users.bulk-delete'), {
-                data: { ids: selectedUsers },
-                onSuccess: () => {
-                    setSelectedUsers([]);
-                }
-            });
-        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete ${selectedUsers.length} users. This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('users.bulk-delete'), {
+                    data: { ids: selectedUsers },
+                    onSuccess: () => {
+                        setSelectedUsers([]);
+                        Swal.fire(
+                            'Deleted!',
+                            'The selected users have been deleted.',
+                            'success'
+                        );
+                    }
+                });
+            }
+        });
     };
 
     // Handle export
     const handleExport = (format: 'csv' | 'pdf') => {
-        const exportUrl = format === 'csv' 
-            ? route('users.export.csv') 
+        const exportUrl = format === 'csv'
+            ? route('users.export.csv')
             : route('users.export.pdf');
-        
+
         window.open(`${exportUrl}?${new URLSearchParams(currentFilters).toString()}`);
     };
 
     return (
         <>
             <Head title={pageTitle} />
-            
+
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-lg-12">
@@ -136,8 +153,8 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                 <div className="d-flex gap-2">
                                     {/* Export Buttons */}
                                     <div className="btn-group">
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             className="btn btn-outline-primary btn-sm dropdown-toggle"
                                             data-bs-toggle="dropdown"
                                         >
@@ -145,7 +162,7 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                         </button>
                                         <ul className="dropdown-menu">
                                             <li>
-                                                <button 
+                                                <button
                                                     className="dropdown-item"
                                                     onClick={() => handleExport('csv')}
                                                 >
@@ -153,7 +170,7 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                                 </button>
                                             </li>
                                             <li>
-                                                <button 
+                                                <button
                                                     className="dropdown-item"
                                                     onClick={() => handleExport('pdf')}
                                                 >
@@ -179,47 +196,87 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                 <div className="row mb-4">
                                     <div className="col-md-3">
                                         <label className="form-label">User Type</label>
-                                        <select 
-                                            className="form-select form-select-sm"
-                                            value={currentFilters.user_type || ''}
-                                            onChange={(e) => handleFilterChange('user_type', e.target.value)}
-                                        >
-                                            <option value="">All Types</option>
-                                            <option value="admin">Admin</option>
-                                            <option value="client">Client</option>
-                                            <option value="delivery_man">Delivery Man</option>
-                                        </select>
+                                        <Select
+                                            className="basic-single"
+                                            classNamePrefix="select"
+                                            value={
+                                                currentFilters.user_type
+                                                ? {
+                                                    value: currentFilters.user_type,
+                                                    label: currentFilters.user_type === 'admin'
+                                                        ? 'Admin'
+                                                        : currentFilters.user_type === 'client'
+                                                        ? 'Client'
+                                                        : 'Delivery Man'
+                                                  }
+                                                : null
+                                            }
+                                            onChange={(option: any) => handleFilterChange('user_type', option ? option.value : '')}
+                                            options={[
+                                                { value: '', label: 'All Types' },
+                                                { value: 'admin', label: 'Admin' },
+                                                { value: 'client', label: 'Client' },
+                                                { value: 'delivery_man', label: 'Delivery Man' }
+                                            ]}
+                                            isClearable
+                                            placeholder="Select User Type"
+                                        />
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Status</label>
-                                        <select 
-                                            className="form-select form-select-sm"
-                                            value={currentFilters.status || ''}
-                                            onChange={(e) => handleFilterChange('status', e.target.value)}
-                                        >
-                                            <option value="">All Status</option>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="banned">Banned</option>
-                                        </select>
+                                        <Select
+                                            className="basic-single"
+                                            classNamePrefix="select"
+                                            value={
+                                                currentFilters.status
+                                                ? {
+                                                    value: currentFilters.status,
+                                                    label: currentFilters.status.charAt(0).toUpperCase() +
+                                                           currentFilters.status.slice(1)
+                                                  }
+                                                : null
+                                            }
+                                            onChange={(option: any) => handleFilterChange('status', option ? option.value : '')}
+                                            options={[
+                                                { value: '', label: 'All Status' },
+                                                { value: 'active', label: 'Active' },
+                                                { value: 'inactive', label: 'Inactive' },
+                                                { value: 'pending', label: 'Pending' },
+                                                { value: 'banned', label: 'Banned' }
+                                            ]}
+                                            isClearable
+                                            placeholder="Select Status"
+                                        />
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Verification</label>
-                                        <select 
-                                            className="form-select form-select-sm"
-                                            value={currentFilters.is_verified || ''}
-                                            onChange={(e) => handleFilterChange('is_verified', e.target.value)}
-                                        >
-                                            <option value="">All</option>
-                                            <option value="1">Verified</option>
-                                            <option value="0">Not Verified</option>
-                                        </select>
+                                        <Select
+                                            className="basic-single"
+                                            classNamePrefix="select"
+                                            value={
+                                                currentFilters.is_verified !== undefined
+                                                ? {
+                                                    value: currentFilters.is_verified,
+                                                    label: currentFilters.is_verified === '1'
+                                                        ? 'Verified'
+                                                        : 'Not Verified'
+                                                  }
+                                                : null
+                                            }
+                                            onChange={(option: any) => handleFilterChange('is_verified', option ? option.value : '')}
+                                            options={[
+                                                { value: '', label: 'All' },
+                                                { value: '1', label: 'Verified' },
+                                                { value: '0', label: 'Not Verified' }
+                                            ]}
+                                            isClearable
+                                            placeholder="Select Verification Status"
+                                        />
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Search</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             className="form-control form-control-sm"
                                             placeholder="Search by name or email..."
                                             value={currentFilters.search || ''}
@@ -233,7 +290,7 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                     <div className="alert alert-info d-flex justify-content-between align-items-center">
                                         <span>{selectedUsers.length} users selected</span>
                                         <div>
-                                            <button 
+                                            <button
                                                 className="btn btn-danger btn-sm"
                                                 onClick={handleBulkDelete}
                                             >
@@ -288,8 +345,8 @@ export default function Index({ pageTitle, auth_user, assets, users, filters }: 
                                                                 <div className="d-flex align-items-center">
                                                                     <div className="avatar avatar-sm me-2">
                                                                         {user.profile_image ? (
-                                                                            <img 
-                                                                                src={user.profile_image} 
+                                                                            <img
+                                                                                src={user.profile_image}
                                                                                 alt={user.name}
                                                                                 className="rounded-circle"
                                                                                 style={{ width: '32px', height: '32px' }}

@@ -6,11 +6,9 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
-
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ClaimsController;
 use App\Http\Controllers\VehicleController;
@@ -26,14 +24,14 @@ use App\Http\Controllers\DeliveryPartnerController;
 use App\Http\Controllers\Frontendwebsite\FronthomeController;
 use App\Http\Controllers\WalkThroughController;
 use App\Http\Controllers\PushNotificationController;
-use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Orders\OrderController;
 use App\Http\Controllers\RefactoredOrderController;
 use App\Http\Controllers\RefactoredClientController;
 use App\Http\Controllers\RefactoredPaymentController;
 use App\Http\Controllers\RefactoredCityController;
-use App\Http\Controllers\RefactoredCountryController;
 use App\Http\Controllers\RefactoredDeliveryManController;
 use App\Http\Controllers\RefactoredVehicleController;
+use App\Http\Controllers\RefactoredCountryController;
 use App\Http\Controllers\WhyDeliveryController;
 use App\Http\Controllers\WithdrawRequestController;
 use App\Http\Controllers\CourierCompaniesController;
@@ -170,50 +168,73 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::post('remove-file', [HomeController::class, 'removeFile'])->name('remove.file');
 
 
-    Route::resource('country', CountryController::class);
-    Route::delete('country-force-delete/{id?}', [CountryController::class, 'action'])->name('country.force.delete');
-    Route::get('country-restore/{id?}', [CountryController::class, 'action'])->name('country.restore');
-
     Route::delete('datatble/destroySelected', [HomeController::class, 'destroySelected'])->name('datatble.destroySelected');
 
-    Route::resource('city', CityController::class);
-    Route::delete('city-force-delete/{id?}', [CityController::class, 'action'])->name('city.force.delete');
-    Route::get('city-restore/{id?}', [CityController::class, 'action'])->name('city.restore');
+    Route::get('/city', [CityController::class, 'dataTableIndex'])->name('city.index');
+    Route::resource('city', RefactoredCityController::class)->except(['index']);
+    Route::delete('city-force-delete/{id?}', [RefactoredCityController::class, 'action'])->name('city.force.delete');
+    Route::get('city-restore/{id?}', [RefactoredCityController::class, 'action'])->name('city.restore');
 
-    Route::resource('vehicle', VehicleController::class);
+    Route::get('country', [RefactoredCountryController::class, 'index'])->name('country.index');
+    Route::get('country/create', [RefactoredCountryController::class, 'create'])->name('country.create');
+
+    Route::get('/vehicle', [VehicleController::class, 'dataTableIndex'])->name('vehicle.index');
+    Route::resource('vehicle', VehicleController::class)->except(['index']);
     Route::delete('vehicle-force-delete/{id?}', [VehicleController::class, 'action'])->name('vehicle.force.delete');
     Route::get('vehicle-restore/{id?}', [VehicleController::class, 'action'])->name('vehicle.restore');
 
-    Route::resource('extracharge', ExtraChargeController::class);
+    Route::get('/extracharge', [ExtraChargeController::class, 'dataTableIndex'])->name('extracharge.index');
+    Route::resource('extracharge', ExtraChargeController::class)->except(['index']);
     Route::delete('extracharge-force-delete/{id?}', [ExtraChargeController::class, 'action'])->name('extracharge.force.delete');
     Route::get('extracharge-restore/{id?}', [ExtraChargeController::class, 'action'])->name('extracharge.restore');
 
-    Route::resource('staticdata', StaticDataController::class);
+    Route::get('/staticdata', [StaticDataController::class, 'dataTableIndex'])->name('staticdata.index');
+    Route::resource('staticdata', StaticDataController::class)->except(['index']);
 
-    Route::resource('users', ClientController::class);
+    Route::get('/users', [ClientController::class, 'dataTableIndex'])->name('users.index');
+    Route::resource('users', ClientController::class)->except(['index']);
     Route::get('users-view/{id?}', [ClientController::class, 'show'])->name('users-view.show');
     Route::get('users-edit/{id?}', [ClientController::class, 'edit'])->name('users-edit.edit');
     Route::get('users-restore/{id?}', [ClientController::class, 'action'])->name('users.restore');
     Route::delete('users-force-delete/{id?}', [ClientController::class, 'action'])->name('users.force.delete');
-    Route::get('user/list/{status?}', [ClientController::class, 'index'])->name('user.status');
+    Route::get('user/list/{status?}', [ClientController::class, 'dataTableIndex'])->name('user.status');
 
     // sub admin
-    Route::resource('sub-admin', SubAdminController::class);
+    Route::get('/sub-admin', [SubAdminController::class, 'dataTableIndex'])->name('sub-admin.index');
+    Route::resource('sub-admin', SubAdminController::class)->except(['index']);
     Route::get('sub-admin-restore/{id?}', [SubAdminController::class, 'action'])->name('sub-admin.restore');
     Route::delete('sub-admin-force-delete/{id?}', [SubAdminController::class, 'action'])->name('sub-admin.force.delete');
 
-    Route::resource('deliveryman', DeliverymanController::class);
+    // Legacy Deliveryman Routes - Redirecting to Inertia version
+    Route::get('deliveryman', function() {
+        return redirect()->route('refactored-deliveryman.index');
+    })->name('deliveryman.index');
+
+    Route::get('deliveryman/create', function() {
+        return redirect()->route('refactored-deliveryman.create');
+    })->name('deliveryman.create');
+
+    Route::get('deliveryman/{id}', function($id) {
+        return redirect()->route('refactored-deliveryman.show', $id);
+    })->name('deliveryman.show');
+
+    Route::get('deliveryman/{id}/edit', function($id) {
+        return redirect()->route('refactored-deliveryman.edit', $id);
+    })->name('deliveryman.edit');
+
+    // Keep these routes for compatibility
     Route::get('deliveryman-view/{id?}', [DeliverymanController::class, 'show'])->name('deliveryman-view.show');
     Route::get('deliverymean-restore/{id?}', [DeliverymanController::class, 'action'])->name('deliveryman.restore');
     Route::delete('deliveryman-force-delete/{id?}', [DeliverymanController::class, 'action'])->name('deliveryman.force.delete');
 
-    Route::resource('document', DocumentController::class);
+    Route::get('/document', [DocumentController::class, 'dataTableIndex'])->name('document.index');
+    Route::resource('document', DocumentController::class)->except(['index']);
     Route::get('document-restore/{id?}', [DocumentController::class, 'action'])->name('document.restore');
     Route::delete('document-force-delete/{id?}', [DocumentController::class, 'action'])->name('document.force.delete');
 
-    // Unified Order Controller Routes
-    Route::resource('order', OrderController::class);
-    Route::get('order-view/{id?}', [OrderController::class, 'show'])->name('order-view.show');
+    // Unified Order Controller Routes - Using Inertia.js
+    Route::resource('order', RefactoredOrderController::class);
+    Route::get('order-view/{id?}', [RefactoredOrderController::class, 'show'])->name('order-view.show');
     Route::get('order-restore/{id?}', [OrderController::class, 'action'])->name('order.restore');
     Route::delete('order-force-delete/{id?}', [OrderController::class, 'action'])->name('order.force.delete');
     Route::get('assign/{id?}', [OrderController::class, 'assign'])->name('order-assign');
@@ -291,10 +312,6 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::resource('refactored-city', RefactoredCityController::class);
     Route::post('refactored-city-action/{id}', [RefactoredCityController::class, 'action'])->name('refactored-city.action');
 
-    // Refactored Country Controller Routes (using service layer)
-    Route::resource('refactored-country', RefactoredCountryController::class);
-    Route::post('refactored-country-action/{id}', [RefactoredCountryController::class, 'action'])->name('refactored-country.action');
-
     // Refactored DeliveryMan Controller Routes (using service layer)
     Route::resource('refactored-deliveryman', RefactoredDeliveryManController::class);
     Route::post('refactored-deliveryman-action/{id}', [RefactoredDeliveryManController::class, 'action'])->name('refactored-deliveryman.action');
@@ -329,7 +346,7 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::resource('pushnotification', PushNotificationController::class);
     Route::get('resend-pushnotification/{id}', [PushNotificationController::class, 'edit'])->name('resend.pushnotification');
 
-    Route::post('order-auto-assign', [App\Http\Controllers\OrderController::class, 'autoAssignCancelOrder']);
+    Route::post('order-auto-assign', [App\Http\Controllers\Orders\OrderController::class, 'autoAssignCancelOrder']);
 
     Route::resource('deliverymandocument', DeliveryManDocumentController::class);
     Route::post('/deliverymandocument/{id}', [DeliveryManDocumentController::class, 'store'])->name('deliverymandocument.action');
@@ -390,7 +407,6 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::get('report-of-deliveryman', [ReportController::class, 'reportOfDeliveryman'])->name('report-of-deliveryman');
     Route::get('report-of-user', [ReportController::class, 'reportOfuser'])->name('report-of-user');
     Route::get('report-of-city', [ReportController::class, 'reportOfCity'])->name('report-of-city');
-    Route::get('report-of-country', [ReportController::class, 'reportOfCountry'])->name('report-of-country');
     Route::get('order-of-report', [ReportController::class, 'orderreport'])->name('order-of-report');
 
     // Report Excel Route
@@ -399,7 +415,6 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::get('report-of-deliverymanexcel/{file_type}', [ReportController::class, 'reportOfDeliverymanExcel'])->name('report-of-deliverymanexcel');
     Route::get('report-of-userexcel/{file_type}', [ReportController::class, 'reportOfuserExcel'])->name('report-of-userexcel');
     Route::get('report-of-cityexcel/{file_type}', [ReportController::class, 'reportOfcityExcel'])->name('report-of-cityexcel');
-    Route::get('report-of-countryexcel/{file_type}', [ReportController::class, 'reportOfcountryExcel'])->name('report-of-countryexcel');
     Route::get('report-of-orderexcel/{file_type}', [ReportController::class, 'downloadOrderExcel'])->name('report-of-orderexcel');
     // Route::get('download-admin-earning', [ReportController::class, 'downloadAdminEarning'])->name('download-admin-earning');
 
@@ -409,7 +424,6 @@ Route::group(['middleware' => ['auth', 'verified', 'assign_user_role']], functio
     Route::get('report-of-deliverymanpdf', [ReportController::class, 'reportOfDeliverymanPdf'])->name('report-of-deliverymanpdf');
     Route::get('report-of-userpdf', [ReportController::class, 'reportOfuserPdf'])->name('report-of-userpdf');
     Route::get('report_of_citypdf', [ReportController::class, 'reportOfcityPdf'])->name('report_of_citypdf');
-    Route::get('report-of-countrypdf', [ReportController::class, 'reportOfcountryPdf'])->name('report-of-countrypdf');
     Route::get('report-of-orderpdf', [ReportController::class, 'downloadOrderReportPdf'])->name('report-of-orderpdf');
 
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import Select from 'react-select';
+import Swal from 'sweetalert2';
 
 interface Order {
     id: number;
@@ -59,8 +61,8 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
             const location = JSON.parse(locationString);
             return location.address || 'N/A';
         } catch {
-            return locationString.length > 50 
-                ? locationString.substring(0, 50) + '...' 
+            return locationString.length > 50
+                ? locationString.substring(0, 50) + '...'
                 : locationString;
         }
     };
@@ -82,7 +84,7 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
     const handleFilterChange = (key: string, value: string) => {
         const newFilters = { ...currentFilters, [key]: value };
         setCurrentFilters(newFilters);
-        
+
         // Apply filters
         router.get(route('order.index'), newFilters, {
             preserveState: true,
@@ -110,30 +112,45 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
     // Handle bulk actions
     const handleBulkDelete = () => {
         if (selectedOrders.length === 0) return;
-        
-        if (confirm(`Are you sure you want to delete ${selectedOrders.length} orders?`)) {
-            router.delete(route('order.bulk-delete'), {
-                data: { ids: selectedOrders },
-                onSuccess: () => {
-                    setSelectedOrders([]);
-                }
-            });
-        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete ${selectedOrders.length} orders. This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route('order.bulk-delete'), {
+                    data: { ids: selectedOrders },
+                    onSuccess: () => {
+                        setSelectedOrders([]);
+                        Swal.fire(
+                            'Deleted!',
+                            'The selected orders have been deleted.',
+                            'success'
+                        );
+                    }
+                });
+            }
+        });
     };
 
     // Handle export
     const handleExport = (format: 'csv' | 'pdf') => {
-        const exportUrl = format === 'csv' 
-            ? route('order.export.csv') 
+        const exportUrl = format === 'csv'
+            ? route('order.export.csv')
             : route('order.export.pdf');
-        
+
         window.open(`${exportUrl}?${new URLSearchParams(currentFilters).toString()}`);
     };
 
     return (
         <>
             <Head title={pageTitle} />
-            
+
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-lg-12">
@@ -143,8 +160,8 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                 <div className="d-flex gap-2">
                                     {/* Export Buttons */}
                                     <div className="btn-group">
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             className="btn btn-outline-primary btn-sm dropdown-toggle"
                                             data-bs-toggle="dropdown"
                                         >
@@ -152,7 +169,7 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                         </button>
                                         <ul className="dropdown-menu">
                                             <li>
-                                                <button 
+                                                <button
                                                     className="dropdown-item"
                                                     onClick={() => handleExport('csv')}
                                                 >
@@ -160,7 +177,7 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                                 </button>
                                             </li>
                                             <li>
-                                                <button 
+                                                <button
                                                     className="dropdown-item"
                                                     onClick={() => handleExport('pdf')}
                                                 >
@@ -186,37 +203,61 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                 <div className="row mb-4">
                                     <div className="col-md-3">
                                         <label className="form-label">Order Type</label>
-                                        <select 
-                                            className="form-select form-select-sm"
-                                            value={currentFilters.order_type || ''}
-                                            onChange={(e) => handleFilterChange('order_type', e.target.value)}
-                                        >
-                                            <option value="">All Orders</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="confirmed">Confirmed</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="delivered">Delivered</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
+                                        <Select
+                                            className="basic-single"
+                                            classNamePrefix="select"
+                                            value={
+                                                currentFilters.order_type
+                                                ? {
+                                                    value: currentFilters.order_type,
+                                                    label: currentFilters.order_type.charAt(0).toUpperCase() +
+                                                           currentFilters.order_type.slice(1).replace('_', ' ')
+                                                  }
+                                                : null
+                                            }
+                                            onChange={(option: any) => handleFilterChange('order_type', option ? option.value : '')}
+                                            options={[
+                                                { value: '', label: 'All Orders' },
+                                                { value: 'pending', label: 'Pending' },
+                                                { value: 'confirmed', label: 'Confirmed' },
+                                                { value: 'in_progress', label: 'In Progress' },
+                                                { value: 'delivered', label: 'Delivered' },
+                                                { value: 'cancelled', label: 'Cancelled' }
+                                            ]}
+                                            isClearable
+                                            placeholder="Select Order Type"
+                                        />
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Status</label>
-                                        <select 
-                                            className="form-select form-select-sm"
-                                            value={currentFilters.status || ''}
-                                            onChange={(e) => handleFilterChange('status', e.target.value)}
-                                        >
-                                            <option value="">All Status</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="confirmed">Confirmed</option>
-                                            <option value="delivered">Delivered</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
+                                        <Select
+                                            className="basic-single"
+                                            classNamePrefix="select"
+                                            value={
+                                                currentFilters.status
+                                                ? {
+                                                    value: currentFilters.status,
+                                                    label: currentFilters.status.charAt(0).toUpperCase() +
+                                                           currentFilters.status.slice(1).replace('_', ' ')
+                                                  }
+                                                : null
+                                            }
+                                            onChange={(option: any) => handleFilterChange('status', option ? option.value : '')}
+                                            options={[
+                                                { value: '', label: 'All Status' },
+                                                { value: 'pending', label: 'Pending' },
+                                                { value: 'confirmed', label: 'Confirmed' },
+                                                { value: 'delivered', label: 'Delivered' },
+                                                { value: 'cancelled', label: 'Cancelled' }
+                                            ]}
+                                            isClearable
+                                            placeholder="Select Status"
+                                        />
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Date From</label>
-                                        <input 
-                                            type="date" 
+                                        <input
+                                            type="date"
                                             className="form-control form-control-sm"
                                             value={currentFilters.date_start || ''}
                                             onChange={(e) => handleFilterChange('date_start', e.target.value)}
@@ -224,8 +265,8 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                     </div>
                                     <div className="col-md-3">
                                         <label className="form-label">Date To</label>
-                                        <input 
-                                            type="date" 
+                                        <input
+                                            type="date"
                                             className="form-control form-control-sm"
                                             value={currentFilters.date_end || ''}
                                             onChange={(e) => handleFilterChange('date_end', e.target.value)}
@@ -238,7 +279,7 @@ export default function Index({ pageTitle, auth_user, assets, orders, filters }:
                                     <div className="alert alert-info d-flex justify-content-between align-items-center">
                                         <span>{selectedOrders.length} orders selected</span>
                                         <div>
-                                            <button 
+                                            <button
                                                 className="btn btn-danger btn-sm"
                                                 onClick={handleBulkDelete}
                                             >

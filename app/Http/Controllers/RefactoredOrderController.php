@@ -18,13 +18,14 @@ use App\Models\CustomerSupport;
 use App\Models\DeliverymanVehicleHistory;
 use App\Models\OrderVehicleHistory;
 use App\Models\Profofpictures;
-use App\Services\OrderService;
+use App\Services\Orders\OrderService;
 use App\Traits\OrderTrait;
 use App\Traits\PaymentTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 /**
  * OrderController handles order-related operations
@@ -51,48 +52,48 @@ class RefactoredOrderController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param OrderDataTable $dataTable
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Inertia\Response
      */
-    public function index(OrderDataTable $dataTable)
+    public function index()
     {
         if (!auth()->user()->can('order-list')) {
             $message = __('message.demo_permission_denied');
             return redirect()->back()->withErrors($message);
         }
 
-        // Use ShadCN table by default, unless classic view is requested
+        // Use Inertia/React by default, unless classic view is requested
         if (request()->has('classic') && request()->classic == 1) {
             // Continue with the original DataTable implementation
-        } else {
-            return $this->shadcnIndex();
+            $dataTable = new OrderDataTable(); // Instantiate OrderDataTable here
+
+            // This code will only run if classic view is requested
+            $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
+            $auth_user = authSession();
+            $assets = ['datatable'];
+            $params = [
+                'status' => request('status') ?? null,
+                'from_date' => request('from_date') ?? null,
+                'to_date' => request('to_date') ?? null,
+                'created_at' => request('created_at') ?? null,
+                'city_id' => request('city_id') ?? null,
+                'country_id' => request('country_id') ?? null,
+            ];
+
+            $filter_file_button = '<a href="' . route('filter.order.data', $params) . '" class=" mr-1 mt-1 btn btn-sm btn-success  text-dark loadRemoteModel"><i class="fas fa-filter"></i> ' . __('message.filter') . '</a>';
+            $reset_file_button = '<a href="' . route('order.index') . '" class="float-right mr-1 mt-0 mb-1 btn btn-sm btn-info text-dark mt-1 pt-1 pb-1"><i class="ri-repeat-line" style="font-size:12px"></i> ' . __('message.reset_filter') . '</a>';
+            $multi_checkbox_delete = $auth_user->can('order-delete') ? '<button id="deleteSelectedBtn" checked-title = "order-checked " class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
+
+            return $dataTable->render('global.order-filter', compact('pageTitle', 'auth_user', 'multi_checkbox_delete', 'params', 'reset_file_button', 'filter_file_button'));
         }
 
-        // This code will only run if classic view is requested
-        $pageTitle = __('message.list_form_title', ['form' => __('message.order')]);
-        $auth_user = authSession();
-        $assets = ['datatable'];
-        $params = null;
-        $params = [
-            'status' => request('status') ?? null,
-            'from_date' => request('from_date') ?? null,
-            'to_date' => request('to_date') ?? null,
-            'created_at' => request('created_at') ?? null,
-            'city_id' => request('city_id') ?? null,
-            'country_id' => request('country_id') ?? null,
-        ];
-
-        $filter_file_button = '<a href="' . route('filter.order.data', $params) . '" class=" mr-1 mt-1 btn btn-sm btn-success  text-dark loadRemoteModel"><i class="fas fa-filter"></i> ' . __('message.filter') . '</a>';
-        $reset_file_button = '<a href="' . route('order.index') . '" class="float-right mr-1 mt-0 mb-1 btn btn-sm btn-info text-dark mt-1 pt-1 pb-1"><i class="ri-repeat-line" style="font-size:12px"></i> ' . __('message.reset_filter') . '</a>';
-        $multi_checkbox_delete = $auth_user->can('order-delete') ? '<button id="deleteSelectedBtn" checked-title = "order-checked " class="float-left btn btn-sm ">' . __('message.delete_selected') . '</button>' : '';
-
-        return $dataTable->render('global.order-filter', compact('pageTitle', 'auth_user', 'multi_checkbox_delete', 'params', 'reset_file_button', 'filter_file_button'));
+        // Use Inertia/React by default
+        return $this->shadcnIndex();
     }
 
     /**
-     * Display a listing of orders with ShadCN styling.
+     * Display a listing of orders with Inertia/React
      *
-     * @return \Illuminate\Http\Response
+     * @return \Inertia\Response
      */
     public function shadcnIndex()
     {
@@ -112,16 +113,26 @@ class RefactoredOrderController extends Controller
 
         $orders = $this->orderService->getAllOrders($perPage, $filters);
 
-        // Create button for admin
-        $button = '';
-        if ($auth_user->can('order-add')) {
-            $button = '<a href="' . route('order.create') . '" class="shadcn-button shadcn-button-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
-                ' . __('message.add_form_title', ['form' => __('message.order')]) . '
-            </a>';
-        }
+        // Prepare filters for React component
+        $reactFilters = [
+            'order_type' => request('order_type'),
+            'status' => request('status'),
+            'date_start' => request('from_date'),
+            'date_end' => request('to_date'),
+            'client_id' => $auth_user->user_type == 'client' ? $auth_user->id : null,
+            'phone' => request('phone'),
+            'pickup_location' => request('pickup_location'),
+            'delivery_location' => request('delivery_location'),
+            'payment_status' => request('payment_status'),
+        ];
 
-        return view('order.shadcn-orders', compact('pageTitle', 'auth_user', 'assets', 'orders', 'button'));
+        return Inertia::render('Orders/Index', [
+            'pageTitle' => $pageTitle,
+            'auth_user' => $auth_user,
+            'assets' => $assets,
+            'orders' => $orders,
+            'filters' => $reactFilters,
+        ]);
     }
 
     /**

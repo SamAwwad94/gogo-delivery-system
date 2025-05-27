@@ -26,22 +26,22 @@
                 ->prepend('<i class="fas fa-home"></i>')
                 ->link->attr(['class' => '']);
 
-            $menu->add('<span>' . __('message.country') . '</span>', ['class' => ''])
-                ->prepend('<i class="fa-sharp fa fa-globe"></i>')
-                ->nickname('country')
-                ->data('permission', 'country-list')
-                ->link->attr(['class' => ''])
-                ->href('#country');
+            // $menu->add('<span>' . __('message.country') . '</span>', ['class' => ''])
+            //   ->prepend('<i class="fa-sharp fa fa-globe"></i>')
+            // ->nickname('country')
+            //->data('permission', 'country-list')
+            //->link->attr(['class' => ''])
+            //->href('#country');
 
-            $menu->country->add('<span>' . __('message.add_form_title', ['form' => __('message.country')]) . '</span>', ['class' => request()->is('country/*/edit') ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'country.create'])
-                ->data('permission', ['country-add', 'country-edit'])
-                ->prepend('<i class="fas fa-plus-square"></i>')
-                ->link->attr(['class' => '']);
+            //$menu->country->add('<span>' . __('message.add_form_title', ['form' => __('message.country')]) . '</span>', ['class' => request()->is('country/*/edit') ? 'sidebar-layout active' : 'sidebar-layout', 'route' => 'country.create'])
+            // ->data('permission', ['country-add', 'country-edit'])
+            //->prepend('<i class="fas fa-plus-square"></i>')
+            //->link->attr(['class' => '']);
 
-            $menu->country->add('<span>' . __('message.list_form_title', ['form' => __('message.country')]) . '</span>', ['class' => 'sidebar-layout', 'route' => 'country.index'])
-                ->data('permission', 'country-list')
-                ->prepend('<i class="fas fa-list"></i>')
-                ->link->attr(['class' => '']);
+            //$menu->country->add('<span>' . __('message.list_form_title', ['form' => __('message.country')]) . '</span>', ['class' => 'sidebar-layout', 'route' => 'country.index'])
+            // ->data('permission', 'country-list')
+            //->prepend('<i class="fas fa-list"></i>')
+            //->link->attr(['class' => '']);
 
             $menu->add('<span>' . __('message.city') . '</span>', ['class' => ''])
                 ->prepend('<i class="fa fa-city"></i>')
@@ -532,12 +532,15 @@
                 ->prepend('<i class="fas fa-file-contract"></i>')
                 ->link->attr(['class' => '']);
 
-            $menu->report->add('<span>' . __('message.country_wise_report') . '</span>', ['class' => 'sidebar-layout', 'route' => 'report-of-country'])
-                ->data('permission', 'country_wise_report')
-                ->prepend('<i class="fas fa-file-contract"></i>')
-                ->link->attr(['class' => '']);
+            //$menu->report->add('<span>' . __('message.country_wise_report') . '</span>', ['class' => 'sidebar-layout', 'route' => 'report-of-country'])
+            //  ->data('permission', 'country_wise_report')
+            //->prepend('<i class="fas fa-file-contract"></i>')
+            //->link->attr(['class' => '']);
 
-            $menu->report->add('<span>' . __('message.order_report') . '</span>', ['class' => 'sidebar-layout', 'route' => 'order-of-report'])
+            $menu->report->add('<span>' . __('message.order_report') . '</span>', [
+                'class' => 'sidebar-layout',
+                'route' => 'order-of-report'
+            ])
                 ->data('permission', 'order_report')
                 ->prepend('<i class="fas fa-file-contract"></i>')
                 ->link->attr(['class' => '']);
@@ -667,7 +670,7 @@
                 ->href('#orderprint');
 
             $menu->orderprint->add('<span>' . __('message.list_form_title', ['form' => __('message.print_label')]) . '</span>', ['class' => 'sidebar-layout', 'route' => 'orderprint-datatable'])
-                ->data('permission', 'country-list')
+                ->data('permission', 'order-list') // or 'orderprint-list' if defined
                 ->prepend('<i class="fas fa-list"></i>')
                 ->link->attr(['class' => '']);
 

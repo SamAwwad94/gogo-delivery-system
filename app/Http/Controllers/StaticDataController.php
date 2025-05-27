@@ -15,7 +15,7 @@ class StaticDataController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(StaticDataDataTable $dataTable)
+    public function dataTableIndex(StaticDataDataTable $dataTable)
     {
         if (!auth()->user()->can('staticdata-list')) {
             $message = __('message.demo_permission_denied');
